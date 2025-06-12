@@ -70,5 +70,3 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
     *   Detect data drift with statistical tests.
 *   **Tools:** Prometheus, Airflow, custom scripts.
 *   **Purpose:** To Describe how we detect and fix model degradation.
-
-**Note:** Any tasks that Cursor AI is not explicitly allowed to perform will be ignored. 
