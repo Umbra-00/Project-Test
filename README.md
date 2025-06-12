@@ -4,9 +4,9 @@ This project aims to build a comprehensive data science platform for personalize
 
 ## Skills and Project Alignment
 
-This project provides evidence for the following key data science requirements:
+This project provides evidence for the following key Deliverable:
 
-| Requirement                 | Project Evidence         |
+| Deliverables                 | Project Evidence         |
 |-----------------------------|--------------------------------------|
 | Advanced ML & Statistics    | ML pipelines, recommendation models  |
 | Data Engineering            | ETL workflows, scalable data systems |
@@ -23,7 +23,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
 
 ### 1. Data Collection and Preprocessing
 
-*   **What You'll Learn:** How to gather, clean, and prepare large datasets—a must for Senior Data Scientists.
+*   **Delivered:** How to gather, clean, and prepare large datasets—.
 *   **Tasks:**
     *   Scrape educational content (e.g., course descriptions) using BeautifulSoup or Scrapy.
     *   Clean data (handle missing values, normalize text) with Pandas.
@@ -33,7 +33,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
 
 ### 2. Model Development
 
-*   **What You'll Learn:** Building and optimizing advanced ML models, a core skill for top-tier roles.
+*   **Delivered :** Building and optimizing advanced ML models, a core skill for top-tier roles.
 *   **Tasks:**
     *   Create a recommendation system (e.g., matrix factorization) using Scikit-learn or TensorFlow.
     *   Integrate an LLM (e.g., Hugging Face's transformers) to generate quizzes or summaries.
@@ -43,7 +43,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
 
 ### 3. Model Evaluation and Validation
 
-*   **What You'll Learn:** Rigorous testing and validation to ensure model reliability.
+*   **Delivered:** Rigorous testing and validation to ensure model reliability.
 *   **Tasks:**
     *   Use cross-validation and precision@K for recommendations.
     *   Evaluate LLM output with BLEU or human-like quality checks.
@@ -53,7 +53,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
 
 ### 4. Deployment
 
-*   **What You'll Learn:** Deploying models at scale, a key expectation for senior roles.
+*   **Delivered :** Deploying models at scale.
 *   **Tasks:**
     *   Build a FastAPI endpoint to serve predictions.
     *   Containerize with Docker and deploy on AWS SageMaker or Google Cloud AI Platform.
@@ -63,7 +63,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
 
 ### 5. Monitoring and Maintenance
 
-*   **What You'll Learn:** Keeping models performant over time, critical for production systems.
+*   **Delivered :** Keeping models performant over time, critical for production systems.
 *   **Tasks:**
     *   Monitor with Prometheus and visualize with Grafana.
     *   Automate retraining using Airflow.
