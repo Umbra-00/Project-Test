@@ -29,7 +29,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
     *   Clean data (handle missing values, normalize text) with Pandas.
     *   Scale processing with Dask or Apache Spark for big data.
 *   **Tools:** Python, Pandas, Dask, PostgreSQL (storage).
-*   **Interview Prep:** Be ready to explain how you'd handle messy data or scale preprocessing for millions of records.
+*   **Purpose:** To explain how we can handle messy data or scale preprocessing for millions of records.
 
 ### 2. Model Development
 
@@ -39,7 +39,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
     *   Integrate an LLM (e.g., Hugging Face's transformers) to generate quizzes or summaries.
     *   Tune models with Optuna for better performance.
 *   **Tools:** Python, TensorFlow/PyTorch, Hugging Face.
-*   **Interview Prep:** Discuss model selection, trade-offs (e.g., speed vs. accuracy), and hyperparameter tuning.
+*  **Purpose:** To explain how we can Discuss model selection, trade-offs (e.g., speed vs. accuracy), and hyperparameter tuning.
 
 ### 3. Model Evaluation and Validation
 
@@ -49,7 +49,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
     *   Evaluate LLM output with BLEU or human-like quality checks.
     *   Log experiments with MLflow.
 *   **Tools:** Scikit-learn, MLflow, custom metrics.
-*   **Interview Prep:** Explain how you validate models and address overfitting or data bias.
+*   **Purpose:** To Explain how we validate models and address overfitting or data bias.
 
 ### 4. Deployment
 
@@ -59,7 +59,7 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
     *   Containerize with Docker and deploy on AWS SageMaker or Google Cloud AI Platform.
     *   Handle real-time requests with low latency.
 *   **Tools:** FastAPI, Docker, AWS/GCP.
-*   **Interview Prep:** Talk about scalability, latency optimization, and production challenges.
+*   **Purpose:** To Talk about scalability, latency optimization, and production challenges.
 
 ### 5. Monitoring and Maintenance
 
@@ -69,6 +69,6 @@ Here's how the project breaks down into workflows, with specific tasks, tools et
     *   Automate retraining using Airflow.
     *   Detect data drift with statistical tests.
 *   **Tools:** Prometheus, Airflow, custom scripts.
-*   **Interview Prep:** Describe how you'd detect and fix model degradation.
+*   **Purpose:** To Describe how we detect and fix model degradation.
 
 **Note:** Any tasks that Cursor AI is not explicitly allowed to perform will be ignored. 
