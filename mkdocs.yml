@@ -1,0 +1,19 @@
+site_name: Educational Data Science Platform Documentation
+
+nav:
+    - Home: index.md
+    - Progress Summary: progress_summary.md
+
+theme: 
+    name: readthedocs
+    highlightjs: true
+    hljs_languages:
+        - python
+        - yaml
+        - sql
+
+markdown_extensions:
+    - admonition
+    - pymdownx.details
+    - pymdownx.superfences
+    - pymdownx.highlight 

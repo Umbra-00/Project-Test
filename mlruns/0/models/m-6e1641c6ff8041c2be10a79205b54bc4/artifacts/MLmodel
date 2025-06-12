@@ -1,0 +1,14 @@
+artifact_path: file:///C:/Users/aksha/Documents/Data%20Project/mlruns/0/models/m-6e1641c6ff8041c2be10a79205b54bc4/artifacts
+flavors:
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.0
+mlflow_version: 3.1.0
+model_id: m-6e1641c6ff8041c2be10a79205b54bc4
+model_size_bytes: 1934
+model_uuid: m-6e1641c6ff8041c2be10a79205b54bc4
+prompts: null
+run_id: 370b5803926f42e7992f24fbc62df4d8
+utc_time_created: '2025-06-12 14:10:22.932784'
