@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/aksha/Documents/Data%20Project/mlruns/0/models/m-4ec15162b26349218cdec91fdd0be4cc/artifacts
+creation_timestamp: 1749909589615
+experiment_id: '0'
+last_updated_timestamp: 1749909593969
+model_id: m-4ec15162b26349218cdec91fdd0be4cc
+model_type: null
+name: CourseRecommendationModel
+source_run_id: 554e457f731d4613b6da1e889b929ce3
+status: 2
+status_message: null

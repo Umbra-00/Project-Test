@@ -11,8 +11,7 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True, nullable=False)
-    email = Column(String, unique=True, nullable=False)
+    user_identifier = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False) # Store hashed passwords
     role = Column(String, default='student', nullable=False) # 'student', 'instructor', 'admin'
     registration_date = Column(DateTime, default=datetime.utcnow)
@@ -24,12 +23,11 @@ class User(Base):
     interactions = relationship("Interaction", back_populates="user")
 
     __table_args__ = (
-        Index('idx_user_username', 'username'),
-        Index('idx_user_email', 'email'),
+        Index('idx_user_user_identifier', 'user_identifier'),
     )
 
     def __repr__(self):
-        return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"
+        return f"<User(id={self.id}, user_identifier='{self.user_identifier}', role='{self.role}')>"
 
 class Course(Base):
     __tablename__ = 'courses'
@@ -37,6 +35,12 @@ class Course(Base):
     title = Column(String, nullable=False)
     description = Column(Text)
     url = Column(String, unique=True, nullable=True) # Added URL column
+    instructor = Column(String) # New field
+    price = Column(Float) # New field
+    currency = Column(String) # New field
+    difficulty = Column(String) # New field
+    category = Column(String) # New field
+    platform = Column(String) # New field
     created_by_user_id = Column(Integer, ForeignKey('users.id')) # Instructor/Admin who created it
     creation_date = Column(DateTime, default=datetime.utcnow)
     difficulty_level = Column(String) # 'beginner', 'intermediate', 'advanced'

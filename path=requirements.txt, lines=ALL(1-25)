@@ -1,0 +1,25 @@
+# Add your project dependencies here
+pandas
+scikit-learn
+beautifulsoup4
+lxml
+dask
+huggingface_hub
+transformers
+optuna
+fastapi==0.111.0
+uvicorn==0.29.0
+docker
+mlflow
+kaggle
+psycopg2-binary==2.9.9
+python-dotenv==1.0.1
+asyncpg==0.29.0
+pydantic==2.7.1
+pydantic-settings==2.2.1
+requests==2.31.0
+asyncpg
+ruff==0.4.4
+textdistance==4.6.0
+scipy
+streamlit 

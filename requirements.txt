@@ -21,6 +21,8 @@ requests==2.31.0
 asyncpg
 ruff==0.4.4
 textdistance==4.6.0
-scipy==1.13.0
-tensorflow
-streamlit 
+python-jose
+passlib
+scipy
+streamlit
+bcrypt

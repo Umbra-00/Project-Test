@@ -8,7 +8,7 @@ from src.data_engineering.db_utils import get_db, check_db_health
 from src.data_collection.data_ingestion import ingest_course_data_batch, validate_scraped_data
 from src.utils.logging_utils import setup_logging
 from src.api.v1.schemas import CourseCreate
-from src.api.v1.endpoints import courses, recommendations
+from src.api.v1.endpoints import courses, recommendations, users # Import users router
 from src.api.v1.exceptions import DatabaseError, NotFoundError, ConflictError # Import custom exceptions
 
 # Setup logging for the API
@@ -24,15 +24,7 @@ app = FastAPI(
 # Include routers for different API functionalities.
 app.include_router(courses.router, prefix="/courses", tags=["Courses"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["Recommendations"])
-
-# --- Temporary Diagnostic Endpoint ---
-@app.get("/get-root-path", summary="Get Application Root Path", tags=["Diagnostics"])
-def get_root_path(request: Request):
-    """
-    Returns the root path as perceived by the FastAPI application at runtime.
-    This is a temporary diagnostic endpoint to debug prefixing issues.
-    """
-    return {"app_root_path": request.scope.get("root_path")}
+app.include_router(users.router, tags=["Users"]) # Include the users router
 
 # --- Global Exception Handlers ---
 @app.exception_handler(DatabaseError)

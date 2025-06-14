@@ -27,11 +27,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: db # Connect to the 'db' service defined in this compose file
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      # DB_HOST: db # REMOVE THIS LINE
+      # DB_PORT: 5432 # REMOVE THIS LINE
+      # DB_NAME: ${DB_NAME} # REMOVE THIS LINE
+      # DB_USER: ${DB_USER} # REMOVE THIS LINE
+      # DB_PASSWORD: ${DB_PASSWORD} # REMOVE THIS LINE
+      # DATABASE_URL for the app running inside Docker: points to the 'db' service
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}
       # MLFLOW_TRACKING_URI: http://mlflow:5000 # Uncomment if MLflow server is added
     depends_on:
       db:

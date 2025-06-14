@@ -1,13 +1,24 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from src.data_engineering.database_models import Course
-from src.api.v1.schemas import CourseCreate
+from src.data_engineering.database_models import Course, User
+from src.api.v1.schemas import CourseCreate, UserCreate
 from src.api.v1.exceptions import DatabaseError, NotFoundError, ConflictError
 from typing import List, Optional, Dict, Any
+from src.utils.auth_utils import get_password_hash
 
 def create_course(db: Session, course: CourseCreate) -> Course:
     try:
-        db_course = Course(title=course.title, description=course.description, url=course.url)
+        db_course = Course(
+            title=course.title,
+            description=course.description,
+            url=str(course.url), # Ensure HttpUrl is converted to string
+            instructor=course.instructor,
+            price=course.price,
+            currency=course.currency,
+            difficulty_level=course.difficulty_level,
+            category=course.category,
+            platform=course.platform
+        )
         db.add(db_course)
         db.commit()
         db.refresh(db_course)
@@ -64,4 +75,22 @@ def get_courses(
 
         return query.offset(skip).limit(limit).all()
     except SQLAlchemyError as e:
-        raise DatabaseError(detail=f"Could not retrieve courses: {e}") from e 
+        raise DatabaseError(detail=f"Could not retrieve courses: {e}") from e
+
+# --- User CRUD Operations ---
+def create_user(db: Session, user: UserCreate):
+    hashed_password = get_password_hash(user.password)
+    db_user = User(user_identifier=user.user_identifier, password_hash=hashed_password, role="student") # Default role to student
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def get_user_by_user_identifier(db: Session, user_identifier: str):
+    return db.query(User).filter(User.user_identifier == user_identifier).first()
+
+def get_user(db: Session, user_id: int):
+    return db.query(User).filter(User.id == user_id).first()
+
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(User).offset(skip).limit(limit).all() 
