@@ -27,7 +27,9 @@ def fetch_courses(
         params["filter_criteria"] = json.dumps(filter_criteria)
 
     try:
-        response = requests.get(f"{FASTAPI_BASE_URL}/courses/", params=params, timeout=(10, 10))
+        response = requests.get(
+            f"{FASTAPI_BASE_URL}/courses/", params=params, timeout=(10, 10)
+        )
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -37,7 +39,9 @@ def fetch_courses(
 
 def post_course(course_data: dict):
     try:
-        response = requests.post(f"{FASTAPI_BASE_URL}/courses/", json=[course_data], timeout=(10, 10))
+        response = requests.post(
+            f"{FASTAPI_BASE_URL}/courses/", json=[course_data], timeout=(10, 10)
+        )
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
