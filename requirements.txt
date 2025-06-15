@@ -1,28 +1,55 @@
-# Add your project dependencies here
-pandas
-scikit-learn
-beautifulsoup4
-lxml
-dask
-huggingface_hub
-transformers
-optuna
-fastapi==0.111.0
-uvicorn==0.29.0
-docker
-mlflow
-kaggle
-psycopg2-binary==2.9.9
-python-dotenv==1.0.1
+# Core Dependencies
+pandas==2.0.1
+scikit-learn==1.2.2
+numpy==1.24.3
+
+# Web Framework
+fastapi==0.95.1
+uvicorn==0.22.0
+streamlit==1.22.0
+gunicorn==20.1.0
+
+# Database
+sqlalchemy==2.0.12
+alembic==1.10.4
+psycopg2-binary==2.9.6
+python-dotenv==1.0.0
 asyncpg==0.29.0
-pydantic==2.7.1
+
+# Pydantic (ensure compatibility with FastAPI version)
+pydantic==1.10.12
 pydantic-settings==2.2.1
+
+# Machine Learning
+# tensorflow==2.12.0
+# torch==2.0.1
+# transformers==4.29.2
+# optuna==3.1.1
+
+# Data Processing
+beautifulsoup4==4.12.2
+lxml==4.9.2
+dask==2023.5.0
+
+# Authentication & Security
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+
+# Monitoring & Logging
+# prometheus-client==0.16.0
+# opentelemetry-api==1.17.0
+
+# Testing & CI/CD
+pytest==7.3.1
+coverage==7.2.5
+ruff==0.0.270
+bandit==1.7.5
+black==23.3.0
+
+# Requests
 requests==2.31.0
-asyncpg
-ruff==0.4.4
 textdistance==4.6.0
-python-jose
-passlib
-scipy
-streamlit
-bcrypt
+
+# Other utilities
+scipy==1.10.1 

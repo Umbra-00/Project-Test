@@ -5,51 +5,46 @@ services:
     image: postgres:13-alpine
     container_name: umbra_postgres_db
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: umbra_db
+      POSTGRES_USER: umbra_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_postgres_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U umbra_user -d umbra_db"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  web:
+  backend:
     build: .
     container_name: umbra_fastapi_app
-    command: uvicorn src.api.v1.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://umbra_user:${DB_PASSWORD:-secure_postgres_password}@db:5432/umbra_db
+      - ENVIRONMENT: development # Set to 'production' for deployment
     volumes:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      # DB_HOST: db # REMOVE THIS LINE
-      # DB_PORT: 5432 # REMOVE THIS LINE
-      # DB_NAME: ${DB_NAME} # REMOVE THIS LINE
-      # DB_USER: ${DB_USER} # REMOVE THIS LINE
-      # DB_PASSWORD: ${DB_PASSWORD} # REMOVE THIS LINE
-      # DATABASE_URL for the app running inside Docker: points to the 'db' service
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}
-      # MLFLOW_TRACKING_URI: http://mlflow:5000 # Uncomment if MLflow server is added
+    command: uvicorn src.api.v1.main:app --host 0.0.0.0 --port 8000 --reload # --reload for local development
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile # Assuming there's a Dockerfile inside the frontend folder
+    container_name: umbra_streamlit_app
+    ports:
+      - "8501:8501" # Default Streamlit port
     depends_on:
-      db:
-        condition: service_healthy
-    # Uncomment and configure if you plan to use an MLflow tracking server within Docker
-    # mlflow:
-    #   image: ghcr.io/mlflow/mlflow:latest
-    #   container_name: umbra_mlflow_server
-    #   ports:
-    #     - "5000:5000"
-    #   environment:
-    #     MLFLOW_TRACKING_URI: "http://0.0.0.0:5000"
-    #     AWS_ACCESS_KEY_ID: your_access_key # Replace with your actual AWS credentials or remove if not using S3 backend
-    #     AWS_SECRET_ACCESS_KEY: your_secret_key
-    #   volumes:
-    #     - ./mlruns:/mlruns
+      - backend # Assuming frontend needs backend to be running
+    environment:
+      BACKEND_URL: http://backend:8000 # Points to the backend service within Docker network
 
 volumes:
-  postgres_data: 
+  postgres_data:
+    driver: local 
