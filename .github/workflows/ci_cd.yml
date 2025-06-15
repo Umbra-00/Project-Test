@@ -96,7 +96,7 @@ jobs:
       run: pip install bandit
     
     - name: Run Bandit
-      run: bandit -r src/ -f custom --skip B104 --severity-level LOW --confidence-level LOW
+      run: bandit -r src/ -f custom --skip B104 --severity-level low --confidence-level low
 
   code-quality:
     runs-on: ubuntu-latest
