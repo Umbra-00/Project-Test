@@ -10,21 +10,22 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from dotenv import load_dotenv
+
 # from urllib.parse import quote_plus # This is no longer needed
 
-from src.utils.logging_utils import setup_logging # Import the new logging utility
+from src.utils.logging_utils import setup_logging  # Import the new logging utility
 
 # Load environment variables from .env file
 # Corrected path for .env at project root
-project_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-load_dotenv(dotenv_path=os.path.join(project_root_path, '.env'))
+project_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+load_dotenv(dotenv_path=os.path.join(project_root_path, ".env"))
 
 # Setup logging
 logger = setup_logging(__name__)
 
 # --- Configuration ---
 # The DATABASE_URL is now expected to be the full connection string directly from .env
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     logger.critical("DATABASE_URL environment variable is not set. Exiting.")
@@ -40,12 +41,13 @@ engine = create_engine(
     poolclass=QueuePool,
     pool_size=10,
     max_overflow=20,
-    pool_recycle=3600, # Recycle connections every hour
+    pool_recycle=3600,  # Recycle connections every hour
     pool_timeout=30,
-    echo=False # Set to True for verbose SQLAlchemy logging (useful for debugging)
+    echo=False,  # Set to True for verbose SQLAlchemy logging (useful for debugging)
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 # --- Error Handling & Retry Logic with Exponential Backoff ---
 def retry_db_operation(max_tries=5, base_delay=1):
@@ -56,16 +58,23 @@ def retry_db_operation(max_tries=5, base_delay=1):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
-                    logger.error(f"Attempt {i+1}/{max_tries} failed for {func.__name__}: {e}")
+                    logger.error(
+                        f"Attempt {i+1}/{max_tries} failed for {func.__name__}: {e}"
+                    )
                     if i < max_tries - 1:
-                        delay = base_delay * (2 ** i) # Exponential backoff
+                        delay = base_delay * (2**i)  # Exponential backoff
                         logger.info(f"Retrying in {delay} seconds...")
                         time.sleep(delay)
                     else:
-                        logger.critical(f"All {max_tries} attempts failed for {func.__name__}. Giving up.")
-                        raise # Re-raise the last exception
+                        logger.critical(
+                            f"All {max_tries} attempts failed for {func.__name__}. Giving up."
+                        )
+                        raise  # Re-raise the last exception
+
         return wrapper
+
     return decorator
+
 
 # --- Database Health Check ---
 @retry_db_operation(max_tries=3)
@@ -80,6 +89,7 @@ def check_db_health():
         logger.error(f"Database health check failed: {e}")
         return False
 
+
 # --- Dependency for getting a database session (for FastAPI/API context) ---
 def get_db():
     """Dependency to get a database session."""
@@ -89,6 +99,7 @@ def get_db():
     finally:
         db.close()
 
+
 # --- SQL Injection Prevention Note ---
 # SQLAlchemy ORM and its Core Expression Language are designed to prevent SQL injection
 # by sanitizing inputs automatically. Avoid using f-strings or direct string formatting
@@ -97,6 +108,7 @@ def get_db():
 # For raw SQL, always use text() with .bindparams():
 # session.execute(text("SELECT * FROM users WHERE username = :username").bindparams(username=user_input))
 
+
 # --- Database Schema Management ---
 def create_all_tables():
     """Creates all tables defined in Base metadata."""
@@ -104,6 +116,7 @@ def create_all_tables():
     try:
         # Import Base and engine from current module
         from src.data_engineering.database_models import Base
+
         Base.metadata.create_all(engine)
         logger.info("All database tables created successfully.")
         return True
@@ -111,17 +124,20 @@ def create_all_tables():
         logger.error(f"Error creating database tables: {e}")
         return False
 
+
 def drop_all_tables():
     """Drops all tables defined in Base metadata."""
     logger.info("Attempting to drop all database tables...")
     try:
         from src.data_engineering.database_models import Base
+
         Base.metadata.drop_all(engine)
         logger.info("All database tables dropped successfully.")
         return True
     except Exception as e:
         logger.error(f"Error dropping database tables: {e}")
         return False
+
 
 if __name__ == "__main__":
     print("--- Database Utilities Module ---")
@@ -130,19 +146,21 @@ if __name__ == "__main__":
         print("Database is healthy!")
 
         # Add a prompt to the user before dropping/creating tables
-        response = input("Do you want to (d)rop and (c)reate all tables, or (s)kip? (d/c/s): ").lower()
-        if response == 'd':
+        response = input(
+            "Do you want to (d)rop and (c)reate all tables, or (s)kip? (d/c/s): "
+        ).lower()
+        if response == "d":
             if drop_all_tables():
                 print("Tables dropped.")
             else:
                 print("Failed to drop tables.")
 
-        if response == 'c':
+        if response == "c":
             if create_all_tables():
                 print("Tables created.")
             else:
                 print("Failed to create tables.")
-        elif response == 'dc':
+        elif response == "dc":
             if drop_all_tables():
                 print("Tables dropped.")
                 if create_all_tables():
@@ -156,35 +174,51 @@ if __name__ == "__main__":
         # Import necessary modules here to avoid circular dependencies at top of file
         from src.api.v1.schemas import UserCreate
         from src.api.v1.crud import create_user, get_user_by_username
-        from src.utils.auth_utils import get_password_hash # Ensure this is imported for hashing
-        
-        INITIAL_ADMIN_USERNAME = os.getenv('INITIAL_ADMIN_USERNAME')
-        INITIAL_ADMIN_PASSWORD = os.getenv('INITIAL_ADMIN_PASSWORD')
+        from src.utils.auth_utils import (
+            get_password_hash,
+        )  # Ensure this is imported for hashing
+
+        INITIAL_ADMIN_USERNAME = os.getenv("INITIAL_ADMIN_USERNAME")
+        INITIAL_ADMIN_PASSWORD = os.getenv("INITIAL_ADMIN_PASSWORD")
 
         if INITIAL_ADMIN_USERNAME and INITIAL_ADMIN_PASSWORD:
             logger.info("Checking for initial admin user...")
             with SessionLocal() as session:
                 existing_admin = get_user_by_username(session, INITIAL_ADMIN_USERNAME)
                 if not existing_admin:
-                    logger.info(f"Creating initial admin user: {INITIAL_ADMIN_USERNAME}")
+                    logger.info(
+                        f"Creating initial admin user: {INITIAL_ADMIN_USERNAME}"
+                    )
                     # Hash the password before creating the user
                     hashed_password = get_password_hash(INITIAL_ADMIN_PASSWORD)
-                    admin_user_create = UserCreate(user_identifier=INITIAL_ADMIN_USERNAME, password_hash=hashed_password, role="admin")
+                    admin_user_create = UserCreate(
+                        user_identifier=INITIAL_ADMIN_USERNAME,
+                        password_hash=hashed_password,
+                        role="admin",
+                    )
                     try:
                         create_user(session, admin_user_create)
                         logger.info("Initial admin user created successfully.")
                     except Exception as e:
                         logger.error(f"Failed to create initial admin user: {e}")
                 else:
-                    logger.info(f"Initial admin user '{INITIAL_ADMIN_USERNAME}' already exists. Skipping creation.")
+                    logger.info(
+                        f"Initial admin user '{INITIAL_ADMIN_USERNAME}' already exists. Skipping creation."
+                    )
         else:
-            logger.warning("INITIAL_ADMIN_USERNAME or INITIAL_ADMIN_PASSWORD not set in .env. Skipping initial admin user creation.")
+            logger.warning(
+                "INITIAL_ADMIN_USERNAME or INITIAL_ADMIN_PASSWORD not set in .env. Skipping initial admin user creation."
+            )
 
     else:
         print("Database is not healthy. Check logs for details.")
 
-    print("\nRemember to configure your `.env` file with correct DB credentials and initial admin user details.")
-    print("Ensure .env file has secure permissions (e.g., 600) and is NOT committed to Git.")
+    print(
+        "\nRemember to configure your `.env` file with correct DB credentials and initial admin user details."
+    )
+    print(
+        "Ensure .env file has secure permissions (e.g., 600) and is NOT committed to Git."
+    )
 
     # Database Connection Credentials:
     # DB_HOST is set to 'localhost' for local Python script execution (e.g., db_utils.py directly).
@@ -222,4 +256,4 @@ if __name__ == "__main__":
 
     # MLFLOW_TRACKING_URI=http://mlflow:5000
     # SECRET_KEY=a_very_long_and_random_string_for_security
-    # API_KEY_EXTERNAL_SERVICE=your_external_api_key_here 
+    # API_KEY_EXTERNAL_SERVICE=your_external_api_key_here

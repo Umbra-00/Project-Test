@@ -2,12 +2,13 @@ import streamlit as st
 from frontend.utils import post_courses, validate_json_input
 
 # Initialize session state for logged_in if not already set
-if 'logged_in' not in st.session_state:
+if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 st.header("Ingest New Course Data")
 with st.expander("Instructions for Ingesting Data"):
-    st.markdown("""
+    st.markdown(
+        """
 Enter a JSON array of course objects below. Each course object should match the `CourseCreate` schema:
 ```json
 [
@@ -34,10 +35,13 @@ Enter a JSON array of course objects below. Each course object should match the 
     "platform": "Another Platform"
   }
 ]
-```    """)
+```    """
+    )
 
-input_data = st.text_area("Enter Course Data (JSON Array)", height=200, 
-                          value='''[
+input_data = st.text_area(
+    "Enter Course Data (JSON Array)",
+    height=200,
+    value="""[
   {
     "title": "FastAPI Essentials",
     "description": "Learn the basics of FastAPI for building web APIs.",
@@ -49,11 +53,14 @@ input_data = st.text_area("Enter Course Data (JSON Array)", height=200,
     "category": "Web Development",
     "platform": "Umbra Academy"
   }
-]''')
+]""",
+)
 
 # Conditional warning and button
 if not st.session_state.logged_in:
-    st.info("Heads up, guest! Data added here is temporary. Registered users' contributions are saved. Proceed anyway?")
+    st.info(
+        "Heads up, guest! Data added here is temporary. Registered users' contributions are saved. Proceed anyway?"
+    )
     proceed_button = st.button("Proceed Anyway")
 else:
     proceed_button = st.button("Ingest Data")
@@ -66,4 +73,4 @@ if proceed_button:
     elif courses_to_ingest:
         result = post_courses(courses_to_ingest)
         if result:
-            st.success(f"Successfully ingested {len(result)} courses.") 
+            st.success(f"Successfully ingested {len(result)} courses.")

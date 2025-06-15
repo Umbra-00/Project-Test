@@ -1,14 +1,12 @@
 import sys
 import os
 import streamlit as st
-import json
+from frontend.utils import register_user, login_user
 
 # Add the project root to sys.path to allow absolute imports
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if project_root not in sys.path:
     sys.path.append(project_root)
-
-from frontend.utils import register_user, login_user
 
 st.title("🔐 Login to Umbra Platform")
 tab1, tab2 = st.tabs(["Register", "Login"])
@@ -27,7 +25,10 @@ with tab1:
             elif len(new_password) < 4:
                 st.error("Password must be at least 4 characters.")
             else:
-                registration_data = {"user_identifier": new_user_identifier, "password": new_password}
+                registration_data = {
+                    "user_identifier": new_user_identifier,
+                    "password": new_password,
+                }
                 response = register_user(registration_data)
                 if response and response.status_code == 200:
                     st.success("Registration successful! Please log in.")
@@ -38,7 +39,9 @@ with tab1:
                         response_json = response.json()
                         if "detail" in response_json:
                             if isinstance(response_json["detail"], list):
-                                error_detail = "; ".join([str(e) for e in response_json["detail"]])
+                                error_detail = "; ".join(
+                                    [str(e) for e in response_json["detail"]]
+                                )
                             else:
                                 error_detail = response_json["detail"]
                         elif "message" in response_json:
@@ -62,7 +65,9 @@ with tab2:
                     token_response = login_user(login_user_identifier, login_password)
                     if token_response:
                         st.success("Login successful!")
-                        st.session_state["access_token"] = token_response["access_token"]
+                        st.session_state["access_token"] = token_response[
+                            "access_token"
+                        ]
                         st.session_state["token_type"] = token_response["token_type"]
                         st.session_state["logged_in"] = True
                         st.session_state["user_identifier"] = login_user_identifier

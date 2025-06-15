@@ -1,13 +1,14 @@
 from pydantic_settings import BaseSettings
 import secrets
 
+
 class Settings(BaseSettings):
     # Database Configuration
-    DB_HOST: str = 'localhost'
+    DB_HOST: str = "localhost"
     DB_PORT: int = 5432
-    DB_USER: str = 'umbra_user'
+    DB_USER: str = "umbra_user"
     DB_PASSWORD: str = secrets.token_urlsafe(16)
-    DB_NAME: str = 'umbra_db'
+    DB_NAME: str = "umbra_db"
 
     # Sqlalchemy Database URL
     @property
@@ -20,11 +21,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Deployment Environment
-    ENVIRONMENT: str = 'development'
+    ENVIRONMENT: str = "development"
 
     class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
-        extra = 'ignore' # Ignore extra fields in .env that are not defined here
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"  # Ignore extra fields in .env that are not defined here
 
-settings = Settings() 
+
+settings = Settings()

@@ -9,8 +9,7 @@ load_dotenv()
 
 # Get database URL from environment
 DATABASE_URL = os.getenv(
-    'DATABASE_URL', 
-    'postgresql://umbra_user:default_password@localhost:5432/umbra_db'
+    "DATABASE_URL", "postgresql://umbra_user:default_password@localhost:5432/umbra_db"
 )
 
 # Create SQLAlchemy engine with connection pooling and error handling
@@ -18,18 +17,15 @@ engine = create_engine(
     DATABASE_URL,
     poolclass=NullPool,  # Disable connection pooling for better error tracking
     pool_pre_ping=True,  # Test connections before using them
-    echo=False  # Set to True for SQL logging during development
+    echo=False,  # Set to True for SQL logging during development
 )
 
 # Create a configured "Session" class
-SessionLocal = sessionmaker(
-    autocommit=False, 
-    autoflush=False, 
-    bind=engine
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base class for declarative models
 Base = declarative_base()
+
 
 def get_db():
     """
@@ -40,4 +36,4 @@ def get_db():
     try:
         yield db
     finally:
-        db.close() 
+        db.close()

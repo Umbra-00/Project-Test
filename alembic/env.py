@@ -34,7 +34,7 @@ load_dotenv(dotenv_path=os.path.join(project_root, ".env"))
 # DB_PASSWORD = os.getenv('DB_PASSWORD')
 
 # Get the full DATABASE_URL directly from environment
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Ensure DATABASE_URL is set
 if not DATABASE_URL:
@@ -93,7 +93,11 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        url=DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://") if DATABASE_URL else None # Ensure asyncpg dialect is used
+        url=(
+            DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+            if DATABASE_URL
+            else None
+        ),  # Ensure asyncpg dialect is used
     )
 
     async with connectable.connect() as connection:

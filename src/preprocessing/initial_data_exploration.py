@@ -1,6 +1,7 @@
 import pandas
 import os
 
+
 def explore_data(file_path):
     """Reads a CSV file into a pandas DataFrame and performs initial data exploration."""
     try:
@@ -25,10 +26,13 @@ def explore_data(file_path):
         print(f"An error occurred during data exploration: {e}")
         return None
 
+
 if __name__ == "__main__":
     # Get the absolute path to the directory where the script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Construct the absolute path to the data file
-    data_file_path = os.path.join(script_dir, "..", "..", "data", "StudentsPerformance.csv")
+    data_file_path = os.path.join(
+        script_dir, "..", "..", "data", "StudentsPerformance.csv"
+    )
     print(f"Exploring data from: {data_file_path}")
-    explore_data(data_file_path) 
+    explore_data(data_file_path)
