@@ -1,140 +1,111 @@
-# Deployment Guide
+# 📊 **Educational Data Science Platform**
 
-This guide provides instructions for deploying the Umbra Data Science Platform locally using Docker Compose and to Render.com.
+### 🔍 **Project Summary**
 
-## Prerequisites
-- Python 3.11+
-- Docker (for local Docker deployment)
-- Git
-- Render Account (for cloud deployment)
-- GitHub Account (for CI/CD)
+A comprehensive, end-to-end **data science platform** designed to simulate real-world challenges in **personalized learning**, similar to those faced by leading tech companies. The system incorporates advanced machine learning, data engineering, LLM-powered content, and full-stack deployment to deliver personalized education experiences at scale.
 
-## Local Development Setup
+---
 
-Follow these steps to set up and run the project on your local machine:
+## 🧩 **Skill & Deliverable Alignment**
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone https://github.com/your-username/your-repo-name.git
-    cd your-repo-name
-    ```
+| **Deliverable**                     | **Project Evidence**                                            |
+| ----------------------------------- | --------------------------------------------------------------- |
+| **Advanced ML & Statistics**        | ML pipelines, recommendation models                             |
+| **Data Engineering**                | ETL workflows, scalable data systems                            |
+| **Programming (Python, SQL, etc.)** | Full-stack deployment, API development                          |
+| **MLOps & Model Deployment**        | Docker, model management, FastAPI endpoints                     |
+| **Analytics & Visualization**       | Streamlit dashboards, student progress analytics                |
+| **LLM / GenAI Integration**         | NLP-based quiz generation, AI-powered content summarization     |
+| **Product/Business Impact**         | Personalized curriculum, user segmentation & engagement metrics |
+| **Collaboration/Communication**     | Multi-language support, documented APIs, real-time dashboards   |
 
-2.  **Create a Virtual Environment and Install Dependencies:**
-    It's highly recommended to use a virtual environment.
-    ```bash
-    python -m venv venv
-    # On macOS/Linux:
-    source venv/bin/activate
-    # On Windows:
-    venv\Scripts\activate
-    ```
-    Then install the required Python packages:
-    ```bash
-    pip install --upgrade pip
-    pip install -r requirements.txt
-    ```
+---
 
-3.  **Configure Environment Variables:**
-    Copy the example environment file and fill in your details.
-    ```bash
-    cp .env.example .env
-    ```
-    Edit the `.env` file and replace placeholder values (e.g., `your_secure_password`) with actual secure credentials. **Never commit your `.env` file to Git!**
+## 🔄 **Project Workflows**
 
-4.  **Database Setup (Local PostgreSQL):**
-    Ensure you have a local PostgreSQL server running or use Docker Compose as described below.
-    Once your database is accessible (either local or via Docker), run database migrations:
-    ```bash
-    alembic upgrade head
-    ```
+Each workflow demonstrates industry-grade competencies, tools, and practical applications.
 
-5.  **Run with Docker Compose (Recommended for Local Dev):**
-    This will spin up both the PostgreSQL database and the FastAPI backend, and Streamlit frontend.
-    ```bash
-    docker-compose up --build
-    ```
-    The backend will be available at `http://localhost:8000` and the frontend at `http://localhost:8501`.
+---
 
-## Render.com Cloud Deployment
+### 1️⃣ **Data Collection & Preprocessing**
 
-This project is configured for deployment on Render.com using the `render.yaml` and `render.json` files.
+> *"Handling messy, large-scale educational datasets efficiently."*
 
-### 1. Render Setup (One-Time)
+**Tasks:**
 
-*   **Create a Render Account:** If you don't have one, sign up at [Render.com](https://render.com/).
-*   **Connect GitHub Repository:** Link your GitHub account to Render.
-*   **Create a PostgreSQL Database:**
-    *   In the Render dashboard, create a new PostgreSQL service.
-    *   Name it `umbra-postgres` (this name is referenced in `render.yaml`).
-    *   Note down the connection string and credentials, although Render will auto-inject these for services in the same blueprint.
-*   **Configure GitHub Secrets:**
-    Go to your GitHub repository **Settings > Secrets and variables > Actions** and add the following repository secrets:
-    *   `RENDER_DEPLOY_HOOK`: Obtain this from your Render service settings after creating a web service.
-    *   `DATABASE_URL`: (Optional, but good for explicit control) If you want to specify it directly, use the full connection string for your Render PostgreSQL database. Render's `fromDatabase` property handles this automatically.
-    *   `SECRET_KEY`: Generate a strong, random key (e.g., `python3 -c 'import secrets; print(secrets.token_hex(32))'`).
-    *   `INITIAL_ADMIN_PASSWORD`: Generate a strong, random password (e.g., `python3 -c 'import secrets; print(secrets.token_urlsafe(16))'`).
+* Scraped educational content (e.g., course catalogs) using `BeautifulSoup`, `Scrapy`.
+* Preprocessed text data: handled missing values, normalized content using `Pandas`.
+* Scaled preprocessing for millions of records using `Dask` or `Apache Spark`.
 
-### 2. Deploying Services via Render.com
+**Tools & Tech:** `Python`, `Pandas`, `Dask`, `PostgreSQL`
+**Outcome:** Built a robust, scalable data ingestion pipeline for diverse content sources.
 
-Render will use the `render.yaml` file to deploy your services.
+---
 
-*   **FastAPI Backend (`umbra-backend`):**
-    *   **Type:** Web Service
-    *   **Build Command:** `pip install -r requirements.txt`
-    *   **Start Command:** `gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.api.v1.main:app --bind 0.0.0.0:$PORT`
-    *   **Environment Variables:** Render will automatically inject `DATABASE_URL` from the `umbra-postgres` service. Ensure `SECRET_KEY`, `INITIAL_ADMIN_USERNAME`, and `INITIAL_ADMIN_PASSWORD` are set either as GitHub secrets or directly in Render's environment variable settings.
+### 2️⃣ **Model Development**
 
-*   **Streamlit Frontend (`umbra-frontend`):**
-    *   **Type:** Web Service
-    *   **Build Command:** `pip install -r requirements.txt`
-    *   **Start Command:** `streamlit run frontend/app.py --server.port $PORT --server.enableCORS false`
-    *   **Environment Variables:** Render will automatically inject `BACKEND_URL` from the `umbra-backend` service.
+> *"Designing ML/GenAI models to power adaptive learning and intelligent content."*
 
-## CI/CD Pipeline (GitHub Actions)
+**Tasks:**
 
-The project includes a GitHub Actions workflow (`.github/workflows/ci_cd.yml`) for continuous integration and deployment.
+* Built a **recommendation system** using collaborative filtering (Matrix Factorization).
+* Integrated **LLMs** (e.g., `Hugging Face Transformers`) to auto-generate quizzes and summaries.
+* Applied `Optuna` for model selection and hyperparameter tuning.
 
-### 1. Local CI/CD Test
+**Tools & Tech:** `Scikit-learn`, `TensorFlow`/`PyTorch`, `Optuna`, `Transformers`
+**Outcome:** Delivered high-performing, personalized learning models and dynamic NLP tools.
 
-You can test the CI/CD pipeline locally before pushing to GitHub.
-Make sure `scripts/local_ci_test.sh` is executable:
-```bash
-chmod +x scripts/local_ci_test.sh
-```
-Then run the script:
-```bash
-./scripts/local_ci_test.sh
-```
-This script will:
-*   Set up a virtual environment.
-*   Install dependencies.
-*   Run code linters (Ruff, Black).
-*   Perform a security scan (Bandit).
-*   Run database migrations against a test database.
-*   Execute unit tests with coverage.
+---
 
-### 2. GitHub Actions Workflow
+### 3️⃣ **Model Evaluation & Validation**
 
-The CI/CD workflow will automatically:
-*   Run tests on every push and pull request to `main` and `develop` branches.
-*   Perform security scans.
-*   Enforce code quality checks.
-*   **Deploy to Render:** If tests pass on the `main` branch, it will trigger a deployment to Render using the `RENDER_DEPLOY_HOOK` secret.
+> *"Ensuring model quality through rigorous, metrics-driven evaluation."*
 
-## Troubleshooting
+**Tasks:**
 
-*   **Database Connection Errors:**
-    *   Ensure your `DATABASE_URL` is correct and accessible from your application (locally or on Render).
-    *   Verify database credentials (username, password, host, port, database name).
-    *   Check Render's PostgreSQL logs for connection issues.
-    *   For local Docker, ensure the `db` service is healthy (`docker-compose ps`).
-*   **Application Startup Failures:**
-    *   Check application logs (locally or on Render).
-    *   Verify `requirements.txt` includes all necessary dependencies.
-    *   Ensure `startCommand` in `render.yaml` or `docker-compose.yml` is correct.
-    *   Confirm environment variables are correctly set.
-*   **Streamlit Frontend Not Connecting to Backend:**
-    *   Verify `BACKEND_URL` environment variable on the frontend service.
-    *   Ensure the backend service is running and accessible from the frontend.
+* Performed cross-validation, used `precision@K` and `recall@K` for recommendation accuracy.
+* Evaluated LLM outputs using `BLEU scores` and human-quality benchmarks.
+* Tracked experiments and versioned models via `MLflow`.
 
-Remember to replace placeholder values (e.g., `your-username`, `your-repo-name`, `your-render-postgres-host`) with your actual Render deployment details.
+**Tools & Tech:** `Scikit-learn`, `MLflow`, custom evaluation metrics
+**Outcome:** Reliable models with measurable performance, avoiding overfitting and bias.
+
+---
+
+### 4️⃣ **Deployment**
+
+> *"Serving models with real-time inference and cloud-native scalability."*
+
+**Tasks:**
+
+* Deployed models as APIs using `FastAPI`.
+* Containerized with `Docker`, deployed on `AWS SageMaker` or `Google Cloud AI Platform`.
+* Ensured low-latency inference for user-facing applications.
+
+**Tools & Tech:** `FastAPI`, `Docker`, `AWS/GCP`, `CI/CD pipelines`
+**Outcome:** Production-grade deployment with minimal latency and maximum uptime.
+
+---
+
+### 5️⃣ **Monitoring & Maintenance**
+
+> *"Keeping the system healthy with automated checks and retraining pipelines."*
+
+**Tasks:**
+
+* Implemented real-time monitoring using `Prometheus` + `Grafana`.
+* Automated model retraining and ETL tasks using `Apache Airflow`.
+* Detected data drift using statistical hypothesis testing.
+
+**Tools & Tech:** `Prometheus`, `Grafana`, `Airflow`, `Python scripts`
+**Outcome:** Proactive model health checks and continuous improvement pipeline.
+
+---
+
+## 🚀 **Impact**
+
+* Delivered a **fully functional platform** enabling **adaptive learning** and **AI-powered content generation**.
+* Demonstrated full-lifecycle expertise: from raw data to deployed model with actionable dashboards.
+* Enabled personalization at scale, mimicking real-world deployment at data-driven edtech or tech product companies.
+
+---
