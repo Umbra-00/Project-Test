@@ -52,6 +52,6 @@ services:
     plan: free
     ipAllowList: []
     maxConnections: 20
-    # databaseMigrations:
-    #   - name: run-alembic-migrations
-    #     command: alembic upgrade head 
+    databaseMigrations:
+      - name: run-alembic-migrations
+        command: alembic upgrade head 
