@@ -116,6 +116,9 @@ jobs:
     - name: Install linters
       run: pip install ruff black==25.1.0
     
+    - name: Auto-format with Black
+      run: black src/
+
     - name: Run linters
       run: |
         ruff check src/
