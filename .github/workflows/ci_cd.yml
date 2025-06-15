@@ -114,7 +114,7 @@ jobs:
         python-version: '3.11'
     
     - name: Install linters
-      run: pip install ruff black
+      run: pip install ruff black==25.1.0
     
     - name: Run linters
       run: |
