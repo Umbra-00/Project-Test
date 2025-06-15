@@ -2,7 +2,7 @@
 
 ### 🔍 **Project Summary**
 
-A comprehensive, end-to-end **data science platform** designed to simulate real-world challenges in **personalized learning**, similar to those faced by leading tech companies. The system incorporates advanced machine learning, data engineering, LLM-powered content, and full-stack deployment to deliver personalized education experiences at scale.
+A complete, data-driven environment that emulates the real-world challenges of personalized learning, comparable to what the top technology companies are doing. The platform features cutting-edge machine learning, data engineering, LLM-enabled content and full-stack deployment to deliver personalized education at scale.
 
 ---
 
