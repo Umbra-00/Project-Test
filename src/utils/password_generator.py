@@ -16,9 +16,5 @@ def generate_strong_password(length=24):
 
 if __name__ == "__main__":
     generated_password = generate_strong_password()
-    temp_password_file = "temp_db_password.txt"
-    with open(temp_password_file, "w") as f:
-        f.write(generated_password)
-    print(
-        f"Generated password saved to {temp_password_file}. Please read it and then I will delete it."
-    )
+    print(f"Generated password: {generated_password}")
+    print("Please copy this password. It will not be saved to a file.")
