@@ -3,7 +3,6 @@
 # Provides utility functions for robust database connection, session management,
 # connection pooling, error handling, and logging.
 
-import os
 import time
 from functools import wraps
 from sqlalchemy import create_engine, text

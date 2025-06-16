@@ -12,7 +12,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:13
+        image: postgres:14
         env:
           POSTGRES_DB: test_db
           POSTGRES_USER: test_user
@@ -20,10 +20,10 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="pg_isready -U test_user"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
     - uses: actions/checkout@v3
@@ -48,26 +48,30 @@ jobs:
       run: |
         echo "Waiting for PostgreSQL to start..."
         for i in $(seq 1 10); do
-          pg_isready -h localhost -p 5432 -U test_user && break
+          pg_isready -h postgres -p 5432 -U test_user && break
           echo "PostgreSQL not ready yet. Waiting 5 more seconds..."
           sleep 5
         done
-        pg_isready -h localhost -p 5432 -U test_user || (echo "PostgreSQL did not start in time" && exit 1)
+        pg_isready -h postgres -p 5432 -U test_user || (echo "PostgreSQL did not start in time" && exit 1)
         echo "PostgreSQL is ready!"
     
     - name: Run database migrations
       env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
       run: |
         alembic upgrade head
     
     - name: Run tests with coverage
       env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
       run: |
         coverage run -m pytest tests/
         coverage xml
     
+    - name: Check PostgreSQL logs
+      if: always()
+      run: docker logs postgres
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
