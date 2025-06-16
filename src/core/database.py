@@ -1,13 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import NullPool
-import os
-from dotenv import load_dotenv
 
-# Load environment variables
+from src.core.config import settings # Import settings
 
-# Get database URL from environment
-DATABASE_URL = "postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db"
+# Use DATABASE_URL from settings, which will be populated by environment variables
+DATABASE_URL = settings.DATABASE_URL
 
 # Create SQLAlchemy engine with connection pooling and error handling
 engine = create_engine(
