@@ -9,27 +9,19 @@ from functools import wraps
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
-from dotenv import load_dotenv
 
-# from urllib.parse import quote_plus # This is no longer needed
-
+from src.core.config import settings # Import settings
 from src.utils.logging_utils import setup_logging  # Import the new logging utility
 
-# Load environment variables from .env file
-# Corrected path for .env at project root
-project_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-load_dotenv(dotenv_path=os.path.join(project_root_path, ".env"))
+# from urllib.parse import quote_plus # This is no longer needed
 
 # Setup logging
 logger = setup_logging(__name__)
 
 # --- Configuration ---
-# The DATABASE_URL is now expected to be the full connection string directly from .env
-DATABASE_URL = os.getenv("DATABASE_URL")
+# The DATABASE_URL is now expected to be the full connection string directly.
+DATABASE_URL = settings.DATABASE_URL # Use settings.DATABASE_URL
 
-if not DATABASE_URL:
-    logger.critical("DATABASE_URL environment variable is not set. Exiting.")
-    raise ValueError("DATABASE_URL environment variable is not set.")
 
 # --- Temporary debug prints ---
 logger.info(f"DEBUG: Constructed DATABASE_URL: {DATABASE_URL}")
@@ -171,44 +163,7 @@ if __name__ == "__main__":
                 print("Failed to drop tables.")
 
         # --- Initial Admin User Creation Logic ---
-        # Import necessary modules here to avoid circular dependencies at top of file
-        from src.api.v1.schemas import UserCreate
-        from src.api.v1.crud import create_user, get_user_by_username
-        from src.utils.auth_utils import (
-            get_password_hash,
-        )  # Ensure this is imported for hashing
-
-        INITIAL_ADMIN_USERNAME = os.getenv("INITIAL_ADMIN_USERNAME")
-        INITIAL_ADMIN_PASSWORD = os.getenv("INITIAL_ADMIN_PASSWORD")
-
-        if INITIAL_ADMIN_USERNAME and INITIAL_ADMIN_PASSWORD:
-            logger.info("Checking for initial admin user...")
-            with SessionLocal() as session:
-                existing_admin = get_user_by_username(session, INITIAL_ADMIN_USERNAME)
-                if not existing_admin:
-                    logger.info(
-                        f"Creating initial admin user: {INITIAL_ADMIN_USERNAME}"
-                    )
-                    # Hash the password before creating the user
-                    hashed_password = get_password_hash(INITIAL_ADMIN_PASSWORD)
-                    admin_user_create = UserCreate(
-                        user_identifier=INITIAL_ADMIN_USERNAME,
-                        password_hash=hashed_password,
-                        role="admin",
-                    )
-                    try:
-                        create_user(session, admin_user_create)
-                        logger.info("Initial admin user created successfully.")
-                    except Exception as e:
-                        logger.error(f"Failed to create initial admin user: {e}")
-                else:
-                    logger.info(
-                        f"Initial admin user '{INITIAL_ADMIN_USERNAME}' already exists. Skipping creation."
-                    )
-        else:
-            logger.warning(
-                "INITIAL_ADMIN_USERNAME or INITIAL_ADMIN_PASSWORD not set in .env. Skipping initial admin user creation."
-            )
+        # Removed for simplified deployment
 
     else:
         print("Database is not healthy. Check logs for details.")

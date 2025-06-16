@@ -22,11 +22,7 @@ services:
           name: umbra-postgres # Name of the database service defined below
           property: connectionString
       - key: SECRET_KEY
-        generateValue: true 
-      - key: INITIAL_ADMIN_USERNAME
-        value: admin 
-      - key: INITIAL_ADMIN_PASSWORD
-        generateValue: true 
+        value: "PLEASE_REPLACE_WITH_A_STRONG_RANDOM_KEY_IN_RENDER_DASHBOARD" # IMPORTANT: Generate a strong random key in Render dashboard.
 
   - type: web
     name: umbra-frontend
@@ -45,6 +41,11 @@ services:
           name: umbra-backend # Name of the backend service defined above
           type: web
           property: hostport # This will give the internal URL (e.g., http://umbra-backend:10000)
+      - key: FASTAPI_BASE_URL # New environment variable for frontend
+        fromService:
+          name: umbra-backend
+          type: web
+          property: hostport
 
   - type: database
     name: umbra-postgres

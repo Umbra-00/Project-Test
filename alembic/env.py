@@ -1,7 +1,5 @@
 import asyncio
 from logging.config import fileConfig
-import os
-from dotenv import load_dotenv
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -21,24 +19,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Load environment variables from .env file
-# Corrected path to .env file at the project root
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-load_dotenv(dotenv_path=os.path.join(project_root, ".env"))
-
-# Remove individual DB_ environment variable retrieval
-# DB_HOST = os.getenv('DB_HOST', 'localhost')
-# DB_PORT = os.getenv('DB_PORT', '5432')
-# DB_NAME = os.getenv('DB_NAME', 'learning_platform_db')
-# DB_USER = os.getenv('DB_USER', 'learning_user')
-# DB_PASSWORD = os.getenv('DB_PASSWORD')
-
 # Get the full DATABASE_URL directly from environment
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Ensure DATABASE_URL is set
-if not DATABASE_URL:
-    raise Exception("DATABASE_URL environment variable is not set for Alembic.")
+DATABASE_URL = "postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db"
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -93,11 +75,7 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        url=(
-            DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-            if DATABASE_URL
-            else None
-        ),  # Ensure asyncpg dialect is used
+        url=DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),  # Ensure asyncpg dialect is used
     )
 
     async with connectable.connect() as connection:

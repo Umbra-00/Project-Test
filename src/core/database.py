@@ -5,12 +5,9 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
 
 # Get database URL from environment
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://umbra_user:default_password@localhost:5432/umbra_db"
-)
+DATABASE_URL = "postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db"
 
 # Create SQLAlchemy engine with connection pooling and error handling
 engine = create_engine(

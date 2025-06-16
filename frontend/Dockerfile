@@ -5,7 +5,7 @@ FROM python:3.11.4-slim
 ENV PYTHONUNBUFFERED 1
 
 # Set the working directory in the container
-WORKDIR /app/frontend
+WORKDIR /app
 
 # Copy requirements file and install Python dependencies
 # Note: We assume requirements.txt is at the project root for consistency.
@@ -14,11 +14,11 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy the frontend application code
-COPY frontend/ .
+COPY frontend/ /app/frontend
 
 # Expose the default Streamlit port (Render will map this)
 EXPOSE 8501
 
 # Command to run the Streamlit application
 # Render's 'startCommand' in render.yaml will override this CMD for deployment.
-CMD ["streamlit", "run", "app.py", "--server.port", "8501", "--server.enableCORS", "false"]
+CMD ["streamlit", "run", "frontend/app.py", "--server.port", "8501", "--server.enableCORS", "false"]
