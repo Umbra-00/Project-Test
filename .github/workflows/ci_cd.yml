@@ -14,13 +14,13 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
+          POSTGRES_DB: umbra
+          POSTGRES_USER: umbra
           POSTGRES_PASSWORD: test_password
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U test_user"
+          --health-cmd="pg_isready -U umbra -d umbra"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -48,22 +48,22 @@ jobs:
       run: |
         echo "Waiting for PostgreSQL to start..."
         for i in $(seq 1 10); do
-          pg_isready -h postgres -p 5432 -U test_user && break
+          pg_isready -h postgres -p 5432 -U umbra -d umbra && break
           echo "PostgreSQL not ready yet. Waiting 5 more seconds..."
           sleep 5
         done
-        pg_isready -h postgres -p 5432 -U test_user || (echo "PostgreSQL did not start in time" && exit 1)
+        pg_isready -h postgres -p 5432 -U umbra -d umbra || (echo "PostgreSQL did not start in time" && exit 1)
         echo "PostgreSQL is ready!"
     
     - name: Run database migrations
       env:
-        DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
+        DATABASE_URL: postgresql://umbra:test_password@postgres:5432/umbra
       run: |
         alembic upgrade head
     
     - name: Run tests with coverage
       env:
-        DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
+        DATABASE_URL: postgresql://umbra:test_password@postgres:5432/umbra
       run: |
         coverage run -m pytest tests/
         coverage xml
