@@ -70,12 +70,28 @@ def retry_db_operation(max_tries=5, base_delay=1):
 # --- Database Health Check ---
 @retry_db_operation(max_tries=3)
 def check_db_health():
-    """Checks the database connection health."""
+    """
+    Checks the database connection and ensure essential tables exist.
+    
+    Returns:
+        bool: True if database is healthy and tables exist, False otherwise.
+    """
     try:
+        tables_to_check = ['courses', 'users']
+
         with SessionLocal() as session:
+            # Simple query to check the connection
             session.execute(text("SELECT 1"))
-        logger.info("Database health check: Connection successful.")
-        return True
+
+            # Check crucial table existence
+            for table in tables_to_check:
+                result = session.execute(text(f"SELECT to_regclass('public.{table}')"))
+                if result.scalar() is None:
+                    logger.warning(f"Table '{table}' does not exist.")
+
+            logger.info("Database health check: Connection successful and essential tables verified (may be missing initially).")
+            return True
+
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         return False

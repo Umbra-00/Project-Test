@@ -28,68 +28,106 @@ async def startup_event():
     logger.info("Initializing Recommendation Model on startup...")
     start_time = time.time()
 
-    with next(get_db()) as db:
-        try:
-            # Try to load existing model
-            model_start = time.time()
-            reco_model.load_model(db_session=db)
-            model_duration = time.time() - model_start
-
-            logger.info(
-                "Recommendation Model loaded successfully on startup",
-                extra={
-                    "performance_metric": True,
-                    "operation": "model_load",
-                    "duration_seconds": model_duration,
-                },
-            )
-        except Exception as e:
-            logger.warning(
-                f"Failed to load Recommendation Model on startup: {str(e)}",
-                extra={"error_type": type(e).__name__},
-                exc_info=True,
-            )
-            db.rollback()  # Explicitly rollback on error
-
-            # Train model as fallback
-            train_start = time.time()
+    try:
+        with next(get_db()) as db:
+            # Check if database tables exist first
             try:
-                reco_model.train(db_session=db)
-                train_duration = time.time() - train_start
+                # Simple test query to check if tables exist
+                db.execute("SELECT 1 FROM courses LIMIT 1")
+                db.commit()
+                tables_exist = True
+            except Exception:
+                tables_exist = False
+                logger.warning(
+                    "Database tables not yet created, skipping model initialization",
+                    extra={"tables_exist": False}
+                )
+
+            if not tables_exist:
+                logger.info(
+                    "Recommendation model initialization skipped - database not ready",
+                    extra={"reason": "tables_not_exist"}
+                )
+                return
+
+            try:
+                # Try to load existing model
+                model_start = time.time()
+                reco_model.load_model(db_session=db)
+                model_duration = time.time() - model_start
 
                 logger.info(
-                    "Recommendation Model trained successfully as fallback",
+                    "Recommendation Model loaded successfully on startup",
                     extra={
                         "performance_metric": True,
-                        "operation": "model_train",
-                        "duration_seconds": train_duration,
+                        "operation": "model_load",
+                        "duration_seconds": model_duration,
                     },
                 )
-            except Exception as train_error:
-                logger.error(
-                    f"Failed to train Recommendation Model: {str(train_error)}",
-                    extra={"error_type": type(train_error).__name__},
+            except Exception as e:
+                logger.warning(
+                    f"Failed to load Recommendation Model on startup: {str(e)}",
+                    extra={"error_type": type(e).__name__},
                     exc_info=True,
                 )
                 db.rollback()  # Explicitly rollback on error
-                raise
 
-        # After attempting to load or train, always ensure the model is up-to-date with latest data
-        # This provides a simple continuous training mechanism upon application startup.
-        retrain_start = time.time()
-        reco_model.retrain_model_if_needed(db_session=db)
-        retrain_duration = time.time() - retrain_start
+                # Train model as fallback
+                train_start = time.time()
+                try:
+                    reco_model.train(db_session=db)
+                    train_duration = time.time() - train_start
 
-        total_duration = time.time() - start_time
-        logger.info(
-            "Recommendation Model initialization complete",
-            extra={
-                "performance_metric": True,
-                "operation": "model_initialization",
-                "total_duration_seconds": total_duration,
-                "retrain_check_duration_seconds": retrain_duration,
-            },
+                    logger.info(
+                        "Recommendation Model trained successfully as fallback",
+                        extra={
+                            "performance_metric": True,
+                            "operation": "model_train",
+                            "duration_seconds": train_duration,
+                        },
+                    )
+                except Exception as train_error:
+                    logger.error(
+                        f"Failed to train Recommendation Model: {str(train_error)}",
+                        extra={"error_type": type(train_error).__name__},
+                        exc_info=True,
+                    )
+                    db.rollback()  # Explicitly rollback on error
+                    # Don't raise here - let the application start without the model
+                    logger.info("Application will start without recommendation model")
+                    return
+
+            # After attempting to load or train, always ensure the model is up-to-date with latest data
+            # This provides a simple continuous training mechanism upon application startup.
+            try:
+                retrain_start = time.time()
+                reco_model.retrain_model_if_needed(db_session=db)
+                retrain_duration = time.time() - retrain_start
+
+                total_duration = time.time() - start_time
+                logger.info(
+                    "Recommendation Model initialization complete",
+                    extra={
+                        "performance_metric": True,
+                        "operation": "model_initialization",
+                        "total_duration_seconds": total_duration,
+                        "retrain_check_duration_seconds": retrain_duration,
+                    },
+                )
+            except Exception as retrain_error:
+                logger.warning(
+                    f"Failed to retrain model: {str(retrain_error)}",
+                    extra={"error_type": type(retrain_error).__name__},
+                    exc_info=True,
+                )
+                db.rollback()
+    except Exception as startup_error:
+        logger.error(
+            f"Startup event failed: {str(startup_error)}",
+            extra={"error_type": type(startup_error).__name__},
+            exc_info=True,
         )
+        # Don't raise - let the application start even if model init fails
 
 
 @router.post(
