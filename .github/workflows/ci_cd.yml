@@ -57,13 +57,13 @@ jobs:
     
     - name: Run database migrations
       env:
-        DATABASE_URL: postgresql://umbra:test_password@postgres:5432/umbra
+        DATABASE_URL: postgresql://${{ services.postgres.env.POSTGRES_USER }}:${{ services.postgres.env.POSTGRES_PASSWORD }}@postgres:5432/${{ services.postgres.env.POSTGRES_DB }}
       run: |
         alembic upgrade head
     
     - name: Run tests with coverage
       env:
-        DATABASE_URL: postgresql://umbra:test_password@postgres:5432/umbra
+        DATABASE_URL: postgresql://${{ services.postgres.env.POSTGRES_USER }}:${{ services.postgres.env.POSTGRES_PASSWORD }}@postgres:5432/${{ services.postgres.env.POSTGRES_DB }}
       run: |
         coverage run -m pytest tests/
         coverage xml
@@ -121,10 +121,9 @@ jobs:
       run: pip install ruff black==25.1.0
     
     - name: Auto-format with Black
-      run: black src/
+      run: black --check src/
 
     - name: Run linters
       run: |
         ruff check src/
         ruff format --check src/
-        black --check src/
