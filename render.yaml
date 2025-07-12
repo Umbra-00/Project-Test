@@ -50,7 +50,7 @@ services:
           type: web
           property: hostport
 
-  - type: service # Corrected: Use 'service' type for internal services
+  - type: pserv # Corrected: Use 'pserv' for private services
     name: mlflow-tracking-server
     plan: starter
     buildCommand: echo "No build command needed for MLflow Docker image"
