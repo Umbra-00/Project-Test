@@ -14,19 +14,17 @@ cache:
     - ${PIP_CACHE_DIR}
     - ${POETRY_CACHE_DIR}
 
-.python_setup: &python_setup
-  before_script:
-    - apt-get update && apt-get install -y --no-install-recommends python3-venv python3-pip
-    - python -m venv .venv
-    - source .venv/bin/activate
-    - pip install --upgrade pip
-    - pip install -r requirements.txt
+# Removed .python_setup as it was causing a script config error
 
 build_job:
   stage: build
   image: python:${PYTHON_VERSION}-slim
   script:
-    - *python_setup # Use the defined python setup
+    - apt-get update && apt-get install -y --no-install-recommends python3-venv python3-pip
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
     - echo "Build stage complete. Dependencies installed."
   artifacts:
     paths:
