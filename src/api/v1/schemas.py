@@ -8,8 +8,8 @@ class UserBase(BaseModel):
     user_identifier: str  # This will be the user-provided unique ID
 
 
-class UserCreate(UserBase):
-    password: str = Field(min_length=4)  # Password for creation, with min length of 4
+class UserCreate(BaseModel):
+    username: str
 
 
 class User(UserBase):
@@ -27,7 +27,7 @@ class User(UserBase):
 class CourseBase(BaseModel):
     title: str
     description: Optional[str] = None
-    url: HttpUrl
+    url: str  # Changed from HttpUrl
     instructor: Optional[str] = None
     price: Optional[float] = None
     currency: Optional[str] = None
@@ -36,8 +36,11 @@ class CourseBase(BaseModel):
     platform: Optional[str] = None
 
 
-class CourseCreate(CourseBase):
-    pass
+class CourseCreate(BaseModel):
+    title: str
+    description: str
+    url: str  # Changed from HttpUrl
+    # Add other fields as necessary
 
 
 class Course(CourseBase):

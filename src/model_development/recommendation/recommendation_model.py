@@ -89,11 +89,21 @@ class RecommendationModel:
         self.course_vectors = self.tfidf_vectorizer.fit_transform(
             self.course_data["description"]
         )
+
+        # Store only essential course info (id, url, and original index) for later retrieval
+        # This is much smaller than storing the entire DataFrame
+        self.indexed_course_info = (
+            self.course_data[["id", "url"]].reset_index().to_dict(orient="records")
+        )
+        
+        # Clear the full course_data DataFrame to free up memory
+        self.course_data = pd.DataFrame() 
+
         logger.info(
-            f"Recommendation model trained with {len(self.course_data)} courses."
+            f"Recommendation model trained with {len(self.indexed_course_info)} courses."
         )
 
-        # Log model with MLflow
+        # Log
         with mlflow.start_run():
             mlflow.sklearn.log_model(
                 sk_model=self.tfidf_vectorizer,
@@ -185,13 +195,19 @@ class RecommendationModel:
         Returns:
             List[dict]: A list of dictionaries, each representing a recommended course.
         """
+        # Check if model is ready
         if (
-            self.tfidf_vectorizer is None
-            or self.course_vectors is None
-            or self.course_data.empty
+            not self.tfidf_vectorizer
+            or (self.course_vectors is not None and self.course_vectors.size == 0)  # Check if course_vectors is not empty
+            or not self.indexed_course_info  # Check if indexed_course_info is populated
         ):
             logger.warning(
-                "Model not trained or loaded. Cannot provide recommendations."
+                "Recommendation model not fully trained or loaded",
+                extra={
+                    "has_vectorizer": bool(self.tfidf_vectorizer),
+                    "has_course_vectors": (self.course_vectors is not None and self.course_vectors.size > 0),
+                    "has_indexed_course_info": bool(self.indexed_course_info),
+                },
             )
             return []
 
@@ -201,19 +217,21 @@ class RecommendationModel:
             logger.warning(f"Reference course with URL {course_url} not found.")
             return []
 
-        # Find the index of the reference course in the DataFrame
-        ref_course_idx = self.course_data[self.course_data["url"] == course_url].index
-        if ref_course_idx.empty:
+        # Find the index of the reference course in the indexed_course_info
+        ref_course_idx = next(
+            (i for i, d in enumerate(self.indexed_course_info) if d["url"] == course_url),
+            None,
+        )
+
+        if ref_course_idx is None:
             logger.warning(
-                f"Reference course URL {course_url} not found in model's course data."
+                f"Reference course URL {course_url} not found in model's indexed course data."
             )
             return []
-        ref_course_idx = ref_course_idx[0]
 
         # Compute cosine similarity between the reference course and all other courses
-        # Ensure description is not None before vectorizing
         reference_vector = self.tfidf_vectorizer.transform(
-            [reference_course.description if reference_course.description else ""]
+            [reference_course.description or ""]
         )
         similarities = cosine_similarity(
             reference_vector, self.course_vectors
@@ -227,18 +245,33 @@ class RecommendationModel:
 
         recommended_courses = []
         for idx in similar_courses_indices:
-            if idx == ref_course_idx:  # Skip the reference course itself
+            # Get the original course ID and URL from the indexed info
+            original_idx_data = next((d for d in self.indexed_course_info if d["index"] == idx), None)
+            
+            if original_idx_data is None:
+                logger.warning(f"Could not find indexed course data for index {idx}. Skipping.")
                 continue
 
-            course = self.course_data.iloc[idx]
-            recommended_courses.append(
-                {
-                    "title": course["title"],
-                    "description": course["description"],
-                    "url": course["url"],
-                    "similarity": similarities[idx],
-                }
-            )
+            course_id = original_idx_data["id"]
+            course_url_rec = original_idx_data["url"]
+
+            if course_url_rec == course_url:  # Skip the reference course itself
+                continue
+
+            # Fetch full course details from DB for the recommended course
+            course_full_details = get_course_by_url(db_session, course_url_rec)
+            if course_full_details:
+                recommended_courses.append(
+                    {
+                        "title": course_full_details.title,
+                        "description": course_full_details.description,
+                        "url": course_full_details.url,
+                        "similarity": similarities[idx],
+                    }
+                )
+            else:
+                logger.warning(f"Full details not found for recommended course URL: {course_url_rec}")
+
             if len(recommended_courses) >= top_n:
                 break
 
@@ -252,8 +285,9 @@ if __name__ == "__main__":
     print("--- Recommendation Model Module ---")
     # Example usage (assuming a database is set up and populated)
     from src.data_engineering.db_utils import SessionLocal
-    from src.api.v1.crud import create_course, get_course_by_url
+    from src.api.v1.crud import create_course, get_course_by_url, get_courses # Added get_courses
     from src.api.v1.schemas import CourseCreate
+    import os # Added import for os
 
     # Ensure MLflow tracking URI is set
     # os.environ["MLFLOW_TRACKING_URI"] = "./mlruns" # This is set in __init__ for consistency
@@ -268,32 +302,32 @@ if __name__ == "__main__":
                 CourseCreate(
                     title="Data Science Fundamentals",
                     description="Introduction to data science concepts.",
-                    url="http://example.com/ds-fundamentals",
+                    url="http://example.com/ds-fundamentals", # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Machine Learning Basics",
                     description="Core machine learning algorithms.",
-                    url="http://example.com/ml-basics",
+                    url="http://example.com/ml-basics", # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Advanced Python Programming",
                     description="Deep dive into Python for advanced users.",
-                    url="http://example.com/adv-python",
+                    url="http://example.com/adv-python", # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="SQL for Data Analysts",
                     description="Essential SQL for data manipulation.",
-                    url="http://example.com/sql-analysts",
+                    url="http://example.com/sql-analysts", # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Deep Learning with PyTorch",
                     description="Neural networks and deep learning using PyTorch.",
-                    url="http://example.com/dl-pytorch",
+                    url="http://example.com/dl-pytorch", # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Introduction to Web Development",
                     description="Basics of front-end and back-end web development.",
-                    url="http://example.com/web-dev",
+                    url="http://example.com/web-dev", # Fixed URL type hint warning
                 ),
             ]
             for dc in dummy_courses:
