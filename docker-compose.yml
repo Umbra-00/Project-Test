@@ -12,9 +12,10 @@ services:
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U umbra_user -d umbra_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s # Give the database more time to initialize
 
   backend:
     build: .
@@ -27,6 +28,21 @@ services:
     ports:
       - "8000:8000"
     command: uvicorn src.api.v1.main:app --host 0.0.0.0 --port 8000 --reload # --reload for local development
+    environment:
+      DATABASE_URL: postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+
+  alembic_migrate:
+    build: .
+    container_name: umbra_alembic_migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db
 
   frontend:
     build: 
@@ -40,6 +56,38 @@ services:
     environment:
       BACKEND_URL: http://backend:8000 # Points to the backend service within Docker network
 
+  mlflow:
+    image: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Use a specific MLflow version
+    container_name: umbra_mlflow_server
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlruns # Mount host volume for MLflow data persistence
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db # Use the same postgres DB
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: /mlruns
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri postgresql://umbra_user:secure_postgres_password@db:5432/umbra_db --artifacts-destination /mlruns
+    depends_on:
+      db:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine # Use official RabbitMQ image with management UI
+    container_name: umbra_rabbitmq
+    ports:
+      - "5672:5672" # Standard AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
+    driver: local 
+  mlflow_data:
     driver: local 
