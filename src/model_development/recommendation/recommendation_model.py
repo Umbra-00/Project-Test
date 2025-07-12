@@ -5,10 +5,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import mlflow
 import mlflow.sklearn
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from sqlalchemy import func
 
 from src.utils.logging_utils import setup_logging
 from src.api.v1.crud import get_courses, get_course_by_url
+from src.data_engineering.database_models import Course
 
 logger = setup_logging(__name__)
 
@@ -56,6 +58,19 @@ class RecommendationModel:
         logger.info(f"Fetched {len(df)} courses from the database.")
         return df
 
+    def _get_course_count_from_db(self, db_session: Session) -> int:
+        """
+        Fetches the total count of courses from the database.
+        """
+        logger.info("Fetching course count from database...")
+        try:
+            count = db_session.query(func.count(Course.id)).scalar()
+            logger.info(f"Fetched {count} courses in the database.")
+            return count
+        except Exception as e:
+            logger.error(f"Error fetching course count from DB: {e}")
+            return 0
+
     def train(self, db_session: Session):
         """
         Trains the TF-IDF vectorizer and computes course similarity vectors.
@@ -69,8 +84,8 @@ class RecommendationModel:
         # Fill any potential NaN descriptions with an empty string
         self.course_data["description"] = self.course_data["description"].fillna("")
 
-        # Initialize TF-IDF Vectorizer
-        self.tfidf_vectorizer = TfidfVectorizer(stop_words="english")
+        # Initialize TF-IDF Vectorizer with max_features to limit vocabulary size
+        self.tfidf_vectorizer = TfidfVectorizer(stop_words="english", max_features=5000) # Added max_features
         self.course_vectors = self.tfidf_vectorizer.fit_transform(
             self.course_data["description"]
         )
@@ -91,49 +106,31 @@ class RecommendationModel:
                 ),
             )
             mlflow.log_param("num_courses", len(self.course_data))
+            mlflow.log_param("vectorizer_type", "tfidf_max_features") # Log this change
             logger.info(
                 f"TF-IDF model logged to MLflow under model name: {self.model_name}"
             )
 
-    def load_model(self, model_version: str = "latest", db_session: Session = None):
-        """
-        Loads the TF-IDF vectorizer from MLflow and re-embeds course data.
-        Requires a database session to re-fetch and embed course data.
-        """
-        logger.info(
-            f"Attempting to load model '{self.model_name}' version '{model_version}' from MLflow."
-        )
+    def load_model(self, db_session: Session):
         try:
-            self.tfidf_vectorizer = mlflow.sklearn.load_model(
-                model_uri=f"models:/{self.model_name}/{model_version}"
-            )
-            logger.info(
-                f"Model '{self.model_name}' version '{model_version}' loaded successfully."
-            )
+            # Define the model URI based on MLFLOW_TRACKING_URI and model name
+            # Assuming MLflow is serving artifacts from /mlruns as configured
+            # and model is registered as 'CourseRecommendationModel'
+            model_uri = f"models:/CourseRecommendationModel/latest"
+            self.tfidf_vectorizer = mlflow.sklearn.load_model(model_uri)
+            self.model = mlflow.pyfunc.load_model(model_uri)
+            logger.info(f"Successfully loaded model '{model_uri}' from MLflow.")
 
-            # Re-embed course data using the loaded model
-            if db_session:
-                self.course_data = self._get_course_data_from_db(db_session)
-                if not self.course_data.empty:
-                    self.course_data["description"] = self.course_data[
-                        "description"
-                    ].fillna("")
-                    self.course_vectors = self.tfidf_vectorizer.transform(
-                        self.course_data["description"]
-                    )
-                    logger.info("Course data re-embedded using loaded model.")
-                else:
-                    logger.warning("No course data found in DB to re-embed.")
-            else:
-                logger.warning(
-                    "No database session provided to load_model. Cannot re-embed course data."
-                )
+            # Re-train only if the model couldn't be loaded or if data is empty
+            if self.model is None or not self.course_data:
+                logger.info("Model not loaded or course data empty, attempting to train.")
+                self.train(db_session=db_session)  # Pass db_session to train
 
         except Exception as e:
-            logger.error(
-                f"Failed to load model '{self.model_name}' version '{model_version}' from MLflow: {e}"
-            )
-            raise  # Re-raise the exception to indicate failure
+            logger.error(f"Failed to load model 'CourseRecommendationModel' version 'latest' from MLflow: {e}")
+            # Fallback to training if loading fails
+            logger.info("Attempting to train model due to loading failure.")
+            self.train(db_session=db_session)  # Pass db_session to train
 
     def retrain_model_if_needed(self, db_session: Session):
         """
@@ -143,17 +140,18 @@ class RecommendationModel:
         (e.g., data drift, performance decay, new data thresholds).
         """
         logger.info("Checking for new data to retrain recommendation model...")
-        latest_course_data = self._get_course_data_from_db(db_session)
+        latest_course_count = self._get_course_count_from_db(db_session)
 
-        if latest_course_data.empty:
+        if latest_course_count == 0:
             logger.warning("No course data available for retraining.")
             return
 
         # Simple check: if the number of courses has changed, retrain.
         # In a more advanced setup, you'd compare data hashes or content.
-        if len(latest_course_data) > len(self.course_data):
+
+        if self.course_data.empty or latest_course_count > len(self.course_data):
             logger.info(
-                f"New courses detected ({len(latest_course_data)} vs {len(self.course_data)}). Retraining model..."
+                f"New courses detected ({latest_course_count} vs {len(self.course_data) if not self.course_data.empty else 0}). Retraining model..."
             )
             self.train(db_session)
             logger.info("Recommendation model retrained successfully with new data.")

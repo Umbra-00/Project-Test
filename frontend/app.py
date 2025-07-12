@@ -4,9 +4,12 @@ import json
 import urllib.parse # For URL encoding
 import os
 
-
 # --- Configuration ---
-FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://umbra-backend:8000/api/v1")
+FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://umbra-backend:10000/api/v1")
+
+# Ensure the base URL has a scheme
+if not FASTAPI_BASE_URL.startswith("http://") and not FASTAPI_BASE_URL.startswith("https://"):
+    FASTAPI_BASE_URL = "http://" + FASTAPI_BASE_URL
 
 st.set_page_config(layout="wide", page_title="Umbra Educational Data Platform")
 
