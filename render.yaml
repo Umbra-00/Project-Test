@@ -50,25 +50,24 @@ services:
           type: web
           property: hostport
 
-  # New MLflow Tracking Server Service
-  - type: private_service # Use private_service since it doesn't need to be publicly accessible
+  - type: service # Corrected: Use 'service' type for internal services
     name: mlflow-tracking-server
-    plan: starter # A small plan for MLflow server
+    plan: starter
     buildCommand: echo "No build command needed for MLflow Docker image"
     startCommand: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri $(DATABASE_URL) --artifacts-destination /mlruns
     healthCheckPath: /
     disk:
       name: mlflow-artifacts
       mountPath: /mlruns
-      sizeGB: 5 # Adjust size as needed, 5GB is a starting point for artifacts
+      sizeGB: 5
     envVars:
-      - key: DATABASE_URL # Use the same database for MLflow backend store
+      - key: DATABASE_URL
         fromDatabase:
           name: umbra-postgres
           property: connectionString
       - key: MLFLOW_ENABLE_TRACKING_SERVER
         value: "true"
-    image: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Use a specific MLflow version, as defined in docker-compose.yml
+    image: ghcr.io/philipmay/mlflow-image:2.10.0-r3
 
 databases:
   - name: umbra-postgres
