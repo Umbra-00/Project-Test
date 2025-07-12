@@ -67,6 +67,21 @@ services:
     image:
       url: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Corrected image format
 
+  - type: worker
+    name: umbra-migrate-db
+    env: python
+    plan: free
+    branch: main
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: alembic upgrade head
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: umbra-postgres
+          property: connectionString
+
 databases:
   - name: umbra-postgres
     plan: free
