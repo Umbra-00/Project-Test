@@ -49,6 +49,7 @@ async def startup_event():
                 extra={"error_type": type(e).__name__},
                 exc_info=True
             )
+            db.rollback()  # Explicitly rollback on error
             
             # Train model as fallback
             train_start = time.time()
@@ -70,6 +71,7 @@ async def startup_event():
                     extra={"error_type": type(train_error).__name__},
                     exc_info=True
                 )
+                db.rollback()  # Explicitly rollback on error
                 raise
 
         # After attempting to load or train, always ensure the model is up-to-date with latest data
@@ -123,16 +125,16 @@ async def get_course_recommendations(
     # Check if model is ready
     if (
         not reco_model.tfidf_vectorizer
-        or not reco_model.course_embeddings
-        or not reco_model.courses_df
+        or (reco_model.course_vectors is not None and reco_model.course_vectors.size == 0)
+        or not reco_model.indexed_course_info
     ):
         logger.warning(
             "Recommendation model not fully trained or loaded",
             extra={
                 "has_vectorizer": bool(reco_model.tfidf_vectorizer),
-                "has_embeddings": bool(reco_model.course_embeddings),
-                "has_courses_df": bool(reco_model.courses_df)
-            }
+                "has_course_vectors": (reco_model.course_vectors is not None and reco_model.course_vectors.size > 0),
+                "has_indexed_course_info": bool(reco_model.indexed_course_info),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -141,29 +143,33 @@ async def get_course_recommendations(
 
     try:
         start_time = time.time()
-        
+
         # For now, user_id is not used directly in reco_model, but for future personalization
-        recommended_courses = reco_model.recommend_courses(
-            course_history_urls or [], db, num_recommendations
-        )
-        
+        recommended_courses = []
+        if course_history_urls:
+            # Use the first URL from history for recommendation, as recommend_courses expects a single URL
+            # In a full-fledged system, you'd combine recommendations from multiple history items or use a different strategy
+            recommended_courses = reco_model.recommend_courses(
+                course_history_urls[0], db, num_recommendations
+            )
+
         recommendation_duration = time.time() - start_time
-        
+
         if not recommended_courses:
             logger.info(
                 f"No specific recommendations for user {user_id}, falling back to popular courses",
                 extra={
                     "user_id": user_id,
                     "course_history_urls": course_history_urls,
-                    "fallback": True
-                }
+                    "fallback": True,
+                },
             )
-            
+
             # Fallback to general popular courses
             fallback_start = time.time()
             popular_courses = crud.get_courses(db, limit=num_recommendations)
             fallback_duration = time.time() - fallback_start
-            
+
             logger.info(
                 f"Returned {len(popular_courses)} popular courses as fallback",
                 extra={
@@ -172,10 +178,10 @@ async def get_course_recommendations(
                     "course_count": len(popular_courses),
                     "recommendation_duration_seconds": recommendation_duration,
                     "fallback_duration_seconds": fallback_duration,
-                    "total_duration_seconds": time.time() - start_time
-                }
+                    "total_duration_seconds": time.time() - start_time,
+                },
             )
-            
+
             return popular_courses
 
         # Success with actual recommendations
