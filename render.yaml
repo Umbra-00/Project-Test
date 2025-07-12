@@ -70,6 +70,7 @@ services:
           property: connectionString
     image: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Corrected image format
 
+jobs:
   - type: worker
     name: umbra-migrate-db
     env: python
