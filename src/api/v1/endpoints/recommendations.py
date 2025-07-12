@@ -23,111 +23,100 @@ router = APIRouter()
 reco_model = RecommendationModel()
 
 
-@router.on_event("startup")
-async def startup_event():
-    logger.info("Initializing Recommendation Model on startup...")
+# Removed startup event - model will initialize lazily on first request
+
+def initialize_model_if_needed(db: Session):
+    """
+    Initialize the recommendation model if it hasn't been initialized yet.
+    This is called lazily on the first request.
+    """
+    global reco_model
+    
+    # Check if model is already initialized
+    if (reco_model.tfidf_vectorizer is not None and 
+        reco_model.course_vectors is not None and 
+        len(reco_model.course_data) > 0):
+        return True
+    
+    logger.info("Initializing Recommendation Model lazily...")
     start_time = time.time()
-
+    
     try:
-        with next(get_db()) as db:
-            # Check if database tables exist first
+        # Check if database tables exist first
+        try:
+            # Simple test query to check if tables exist
+            db.execute("SELECT 1 FROM courses LIMIT 1")
+            db.commit()
+            tables_exist = True
+        except Exception:
+            tables_exist = False
+            logger.warning(
+                "Database tables not yet created, skipping model initialization",
+                extra={"tables_exist": False}
+            )
+            return False
+
+        if not tables_exist:
+            logger.info(
+                "Recommendation model initialization skipped - database not ready",
+                extra={"reason": "tables_not_exist"}
+            )
+            return False
+
+        try:
+            # Try to load existing model
+            model_start = time.time()
+            reco_model.load_model(db_session=db)
+            model_duration = time.time() - model_start
+
+            logger.info(
+                "Recommendation Model loaded successfully",
+                extra={
+                    "performance_metric": True,
+                    "operation": "model_load",
+                    "duration_seconds": model_duration,
+                },
+            )
+            return True
+        except Exception as e:
+            logger.warning(
+                f"Failed to load Recommendation Model: {str(e)}",
+                extra={"error_type": type(e).__name__},
+                exc_info=True,
+            )
+            db.rollback()  # Explicitly rollback on error
+
+            # Train model as fallback
+            train_start = time.time()
             try:
-                # Simple test query to check if tables exist
-                db.execute("SELECT 1 FROM courses LIMIT 1")
-                db.commit()
-                tables_exist = True
-            except Exception:
-                tables_exist = False
-                logger.warning(
-                    "Database tables not yet created, skipping model initialization",
-                    extra={"tables_exist": False}
-                )
-
-            if not tables_exist:
-                logger.info(
-                    "Recommendation model initialization skipped - database not ready",
-                    extra={"reason": "tables_not_exist"}
-                )
-                return
-
-            try:
-                # Try to load existing model
-                model_start = time.time()
-                reco_model.load_model(db_session=db)
-                model_duration = time.time() - model_start
+                reco_model.train(db_session=db)
+                train_duration = time.time() - train_start
 
                 logger.info(
-                    "Recommendation Model loaded successfully on startup",
+                    "Recommendation Model trained successfully as fallback",
                     extra={
                         "performance_metric": True,
-                        "operation": "model_load",
-                        "duration_seconds": model_duration,
+                        "operation": "model_train",
+                        "duration_seconds": train_duration,
                     },
                 )
-            except Exception as e:
-                logger.warning(
-                    f"Failed to load Recommendation Model on startup: {str(e)}",
-                    extra={"error_type": type(e).__name__},
+                return True
+            except Exception as train_error:
+                logger.error(
+                    f"Failed to train Recommendation Model: {str(train_error)}",
+                    extra={"error_type": type(train_error).__name__},
                     exc_info=True,
                 )
                 db.rollback()  # Explicitly rollback on error
+                return False
 
-                # Train model as fallback
-                train_start = time.time()
-                try:
-                    reco_model.train(db_session=db)
-                    train_duration = time.time() - train_start
-
-                    logger.info(
-                        "Recommendation Model trained successfully as fallback",
-                        extra={
-                            "performance_metric": True,
-                            "operation": "model_train",
-                            "duration_seconds": train_duration,
-                        },
-                    )
-                except Exception as train_error:
-                    logger.error(
-                        f"Failed to train Recommendation Model: {str(train_error)}",
-                        extra={"error_type": type(train_error).__name__},
-                        exc_info=True,
-                    )
-                    db.rollback()  # Explicitly rollback on error
-                    # Don't raise here - let the application start without the model
-                    logger.info("Application will start without recommendation model")
-                    return
-
-            # After attempting to load or train, always ensure the model is up-to-date with latest data
-            # This provides a simple continuous training mechanism upon application startup.
-            try:
-                retrain_start = time.time()
-                reco_model.retrain_model_if_needed(db_session=db)
-                retrain_duration = time.time() - retrain_start
-
-                total_duration = time.time() - start_time
-                logger.info(
-                    "Recommendation Model initialization complete",
-                    extra={
-                        "performance_metric": True,
-                        "operation": "model_initialization",
-                        "total_duration_seconds": total_duration,
-                        "retrain_check_duration_seconds": retrain_duration,
-                    },
-                )
-            except Exception as retrain_error:
-                logger.warning(
-                    f"Failed to retrain model: {str(retrain_error)}",
-                    extra={"error_type": type(retrain_error).__name__},
-                    exc_info=True,
-                )
-                db.rollback()
-    except Exception as startup_error:
+    except Exception as init_error:
         logger.error(
-            f"Startup event failed: {str(startup_error)}",
-            extra={"error_type": type(startup_error).__name__},
+            f"Model initialization failed: {str(init_error)}",
+            extra={"error_type": type(init_error).__name__},
             exc_info=True,
         )
-        # Don't raise - let the application start even if model init fails
+        return False
 
 
 @router.post(
@@ -159,30 +148,31 @@ async def get_course_recommendations(
         },
     )
 
-    # Check if model is ready
-    if (
-        not reco_model.tfidf_vectorizer
-        or (
-            reco_model.course_vectors is not None
-            and reco_model.course_vectors.size == 0
-        )
-        or not reco_model.indexed_course_info
-    ):
+    # Initialize model if needed
+    if not initialize_model_if_needed(db):
         logger.warning(
-            "Recommendation model not fully trained or loaded",
+            "Recommendation model could not be initialized",
             extra={
-                "has_vectorizer": bool(reco_model.tfidf_vectorizer),
-                "has_course_vectors": (
-                    reco_model.course_vectors is not None
-                    and reco_model.course_vectors.size > 0
-                ),
-                "has_indexed_course_info": bool(reco_model.indexed_course_info),
+                "user_id": user_id,
+                "fallback_to_popular": True,
             },
         )
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Recommendation model not yet trained or loaded.",
+        # Fallback to popular courses immediately
+        fallback_start = time.time()
+        popular_courses = crud.get_courses(db, limit=num_recommendations)
+        fallback_duration = time.time() - fallback_start
+        
+        logger.info(
+            f"Returned {len(popular_courses)} popular courses as fallback (model not ready)",
+            extra={
+                "performance_metric": True,
+                "user_id": user_id,
+                "course_count": len(popular_courses),
+                "fallback_duration_seconds": fallback_duration,
+                "reason": "model_not_ready",
+            },
         )
+        return popular_courses
 
     try:
         start_time = time.time()
