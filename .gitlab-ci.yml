@@ -40,12 +40,14 @@ test_job:
     - build_job
   script:
     - source .venv/bin/activate
+    - pip install --upgrade pip # Ensure pip is up-to-date
+    - pip install -r requirements.txt # Re-install dependencies using cache
     - echo "Running tests..."
     - pytest --cov=src --cov-report=xml
     - echo "Running black code formatter check..."
     - black --check src/
     - echo "Running flake8 code style check..."
-    - pip install flake8 # Install flake8
+    - pip install flake8 # Ensure flake8 is installed for this job
     - flake8 src/
     - echo "Tests and code checks complete."
   coverage: /^\s*TOTAL.*\s+(\d+\%)$/
