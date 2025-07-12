@@ -4,27 +4,26 @@ services:
     env: python
     plan: free
     branch: main
-    dependsOn:
-      - umbra-migrate-db
     buildCommand: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt
+      alembic upgrade head # Re-added migration command here
     startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker src.api.v1.main:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.4 # Ensure this matches your project's Python version
+        value: 3.11.4
       - key: ENVIRONMENT
-        value: production # Set the environment for the backend
+        value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: umbra-postgres # Name of the database service defined below
+          name: umbra-postgres
           property: connectionString
       - key: SECRET_KEY
-        value: "PLEASE_REPLACE_WITH_A_STRONG_RANDOM_KEY_IN_RENDER_DASHBOARD" # IMPORTANT: Generate a strong random key in Render dashboard.
+        value: "PLEASE_REPLACE_WITH_A_STRONG_RANDOM_KEY_IN_RENDER_DASHBOARD"
       - key: MLFLOW_TRACKING_URI
         fromService:
           name: mlflow-tracking-server
-          type: private_service
+          type: pserv
           property: hostport
 
   - type: web
@@ -38,19 +37,19 @@ services:
     startCommand: streamlit run frontend/app.py --server.port $PORT --server.enableCORS false
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.4 # Ensure this matches your project's Python version
+        value: 3.11.4
       - key: BACKEND_URL
         fromService:
-          name: umbra-backend # Name of the backend service defined above
+          name: umbra-backend
           type: web
-          property: hostport # This will give the internal URL (e.g., http://umbra-backend:10000)
-      - key: FASTAPI_BASE_URL # New environment variable for frontend
+          property: hostport
+      - key: FASTAPI_BASE_URL
         fromService:
           name: umbra-backend
           type: web
           property: hostport
 
-  - type: pserv # Corrected: Use 'pserv' for private services
+  - type: pserv
     name: mlflow-tracking-server
     plan: starter
     buildCommand: echo "No build command needed for MLflow Docker image"
@@ -67,27 +66,10 @@ services:
           property: connectionString
       - key: MLFLOW_ENABLE_TRACKING_SERVER
         value: "true"
-    image: ghcr.io/philipmay/mlflow-image:2.10.0-r3
+    image:
+      url: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Corrected image format
 
 databases:
   - name: umbra-postgres
     plan: free
-    ipAllowList: []
-
-jobs:
-  - name: umbra-migrate-db
-    type: job
-    plan: starter # A small plan is usually sufficient for a migration job
-    buildCommand: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install alembic # Ensure alembic is installed for the job
-    startCommand: alembic upgrade head
-    region: oregon # Ensure this matches your other services' region or default
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: umbra-postgres
-          property: connectionString
-      - key: PYTHON_VERSION
-        value: 3.11.4 # Ensure this matches your project's Python version 
+    ipAllowList: [] 
