@@ -5,22 +5,19 @@ stages:
 
 variables:
   PYTHON_VERSION: "3.11.4"
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache" # Cache pip packages
-  POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.poetry_cache" # Cache poetry virtualenvs
-  PIP_NO_CACHE_DIR: "false" # Use cache for pip installs
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache"
+  POETRY_CACHE_DIR: "$CI_PROJECT_DIR/.poetry_cache"
+  PIP_NO_CACHE_DIR: "false"
 
 cache:
   paths:
     - ${PIP_CACHE_DIR}
     - ${POETRY_CACHE_DIR}
 
-# Removed .python_setup as it was causing a script config error
-
 build_job:
   stage: build
   image: python:${PYTHON_VERSION}-slim
   script:
-    - apt-get update && apt-get install -y --no-install-recommends python3-venv python3-pip
     - python -m venv .venv
     - source .venv/bin/activate
     - pip install --upgrade pip
@@ -34,21 +31,20 @@ build_job:
 test_job:
   stage: test
   image: python:${PYTHON_VERSION}-slim
-  needs:
+  needs: 
     - build_job
   script:
     - source .venv/bin/activate
-    - pip install --upgrade pip # Ensure pip is up-to-date
-    - pip install -r requirements.txt # Re-install dependencies using cache
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
     - echo "Running tests..."
-    - pytest --cov=src --cov-report=xml
+    - pytest --cov=src --cov-report=xml --junitxml=junit.xml
     - echo "Running black code formatter check..."
     - black --check src/
     - echo "Running flake8 code style check..."
-    - pip install flake8 # Ensure flake8 is installed for this job
+    - pip install flake8
     - flake8 src/
     - echo "Tests and code checks complete."
-  coverage: /^\s*TOTAL.*\s+(\d+\%)$/
   artifacts:
     reports:
       junit: junit.xml
@@ -61,14 +57,14 @@ test_job:
 
 deploy_job:
   stage: deploy
-  image: alpine/git # Minimal image for curl
+  image: alpine/git
   needs:
     - test_job
   script:
     - echo "Triggering Render deployment..."
-    - apk add --no-cache curl # Install curl in alpine image
+    - apk add --no-cache curl
     - curl -X POST ${RENDER_DEPLOY_HOOK}
     - echo "Render deployment triggered."
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH # Only deploy from the default branch
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: on_success 

@@ -5,7 +5,9 @@ import os
 
 # --- Configuration ---
 # FASTAPI_BASE_URL = "http://localhost:8000/api/v1"
-FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://localhost:8000/api/v1") # Use environment variable, fallback to localhost
+FASTAPI_BASE_URL = os.getenv(
+    "FASTAPI_BASE_URL", "http://localhost:8000/api/v1"
+)  # Use environment variable, fallback to localhost
 
 st.set_page_config(layout="wide", page_title="Umbra Educational Data Platform")
 

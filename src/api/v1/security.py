@@ -16,7 +16,9 @@ from src.utils.logging_utils import setup_logging
 logger = setup_logging(__name__)
 
 # --- Configuration for JWT ---
-SECRET_KEY = os.getenv("SECRET_KEY", "default-fallback-secret-key")  # Load from environment with a fallback
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "default-fallback-secret-key"
+)  # Load from environment with a fallback
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

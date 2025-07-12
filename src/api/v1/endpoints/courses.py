@@ -11,8 +11,8 @@ from src.api.v1.schemas import CourseCreate, Course
 from src.api.v1 import crud  # Import the crud module
 from src.utils.logging_utils import setup_logging, log_api_request
 from src.core.logging_config import request_id_var
-from src.api.v1 import schemas # Import schemas for get_current_active_user
-from src.api.v1.security import get_current_active_user # Corrected import path
+from src.api.v1 import schemas  # Import schemas for get_current_active_user
+from src.api.v1.security import get_current_active_user  # Corrected import path
 
 logger = setup_logging(__name__)
 
@@ -24,8 +24,7 @@ router = APIRouter()
 )
 @log_api_request
 async def ingest_courses(
-    course_data_list: List[CourseCreate], 
-    db: Session = Depends(get_db)
+    course_data_list: List[CourseCreate], db: Session = Depends(get_db)
 ):
     """
     Ingests a list of course data into the database.
@@ -34,9 +33,9 @@ async def ingest_courses(
     """
     logger.info(
         f"Course ingestion request received with {len(course_data_list)} courses",
-        extra={"course_count": len(course_data_list)}
+        extra={"course_count": len(course_data_list)},
     )
-    
+
     if not course_data_list:
         logger.warning("Course ingestion attempted with empty data")
         raise HTTPException(status_code=400, detail="No course data provided.")
@@ -44,7 +43,7 @@ async def ingest_courses(
     # Validate courses
     valid_data_for_ingestion = []
     invalid_count = 0
-    
+
     for course in course_data_list:
         course_dict = course.dict()
         if validate_scraped_data(course_dict):
@@ -53,15 +52,15 @@ async def ingest_courses(
             invalid_count += 1
             logger.warning(
                 f"Invalid course data: {course_dict.get('title', 'Unknown')}",
-                extra={"course_data": course_dict}
+                extra={"course_data": course_dict},
             )
 
     logger.info(
         f"Course validation completed: {len(valid_data_for_ingestion)} valid, {invalid_count} invalid",
         extra={
             "valid_count": len(valid_data_for_ingestion),
-            "invalid_count": invalid_count
-        }
+            "invalid_count": invalid_count,
+        },
     )
 
     if not valid_data_for_ingestion:
@@ -74,16 +73,16 @@ async def ingest_courses(
     try:
         start_time = time.time()
         ingested_courses = []
-        
+
         for course_data in valid_data_for_ingestion:
             # Use crud.create_course directly with a single CourseCreate object
             course_obj = crud.create_course(db, CourseCreate(**course_data))
             ingested_courses.append(course_obj)
             logger.debug(
                 f"Course ingested: {course_obj.title}",
-                extra={"course_id": course_obj.id, "course_url": course_obj.url}
+                extra={"course_id": course_obj.id, "course_url": course_obj.url},
             )
-        
+
         duration = time.time() - start_time
         logger.info(
             f"Successfully ingested {len(ingested_courses)} courses",
@@ -91,17 +90,19 @@ async def ingest_courses(
                 "performance_metric": True,
                 "ingested_count": len(ingested_courses),
                 "duration_seconds": duration,
-                "avg_time_per_course": duration / len(ingested_courses) if ingested_courses else 0
-            }
+                "avg_time_per_course": (
+                    duration / len(ingested_courses) if ingested_courses else 0
+                ),
+            },
         )
-        
+
         return ingested_courses
-        
+
     except Exception as e:
         logger.error(
             f"API - Error during course ingestion: {str(e)}",
             extra={"error_type": type(e).__name__},
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
             status_code=500, detail=f"Internal server error during ingestion: {e}"
@@ -144,10 +145,10 @@ def read_courses(
             "limit": limit,
             "sort_by": sort_by,
             "sort_order": sort_order,
-            "has_filters": bool(filter_criteria)
-        }
+            "has_filters": bool(filter_criteria),
+        },
     )
-    
+
     # Parse filter_criteria if provided
     parsed_filter_criteria = {}
     if filter_criteria:
@@ -155,12 +156,12 @@ def read_courses(
             parsed_filter_criteria = json.loads(filter_criteria)
             logger.debug(
                 f"Filter criteria parsed successfully",
-                extra={"filter_criteria": parsed_filter_criteria}
+                extra={"filter_criteria": parsed_filter_criteria},
             )
         except json.JSONDecodeError as e:
             logger.error(
                 f"Invalid JSON in filter_criteria: {str(e)}",
-                extra={"filter_criteria_raw": filter_criteria}
+                extra={"filter_criteria_raw": filter_criteria},
             )
             raise HTTPException(
                 status_code=400, detail="Invalid JSON format for filter_criteria."
@@ -176,7 +177,7 @@ def read_courses(
             sort_order=sort_order,
             filter_criteria=parsed_filter_criteria,
         )
-        
+
         duration = time.time() - start_time
         logger.info(
             f"Successfully retrieved {len(courses)} courses",
@@ -185,17 +186,17 @@ def read_courses(
                 "course_count": len(courses),
                 "duration_seconds": duration,
                 "skip": skip,
-                "limit": limit
-            }
+                "limit": limit,
+            },
         )
-        
+
         return courses
-        
+
     except Exception as e:
         logger.error(
             f"Error retrieving courses: {str(e)}",
             extra={"error_type": type(e).__name__},
-            exc_info=True
+            exc_info=True,
         )
         raise
 
@@ -216,22 +217,19 @@ def read_course_by_url(
 
     - **course_url**: The full URL of the course.
     """
-    logger.info(
-        f"Course retrieval by URL request",
-        extra={"course_url": course_url}
-    )
-    
+    logger.info(f"Course retrieval by URL request", extra={"course_url": course_url})
+
     try:
         start_time = time.time()
         db_course = crud.get_course_by_url(db, course_url)
-        
+
         if db_course is None:
             logger.warning(
                 f"Course not found for URL: {course_url}",
-                extra={"course_url": course_url}
+                extra={"course_url": course_url},
             )
             raise HTTPException(status_code=404, detail="Course not found.")
-        
+
         duration = time.time() - start_time
         logger.info(
             f"Successfully retrieved course: {db_course.title}",
@@ -239,21 +237,20 @@ def read_course_by_url(
                 "performance_metric": True,
                 "course_id": db_course.id,
                 "course_title": db_course.title,
-                "duration_seconds": duration
-            }
+                "duration_seconds": duration,
+            },
         )
-        
+
         return db_course
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(
             f"Error retrieving course by URL: {str(e)}",
             extra={"course_url": course_url, "error_type": type(e).__name__},
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error while retrieving course"
+            status_code=500, detail=f"Internal server error while retrieving course"
         )

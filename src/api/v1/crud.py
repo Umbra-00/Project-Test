@@ -5,7 +5,11 @@ from src.api.v1.schemas import CourseCreate, UserCreate
 from src.api.v1.exceptions import DatabaseError, ConflictError
 from typing import List, Optional, Dict, Any
 from src.utils.auth_utils import get_password_hash
-from src.utils.logging_utils import setup_logging, log_database_operation, log_security_event
+from src.utils.logging_utils import (
+    setup_logging,
+    log_database_operation,
+    log_security_event,
+)
 import time
 
 logger = setup_logging(__name__)

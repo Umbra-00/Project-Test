@@ -85,7 +85,9 @@ class RecommendationModel:
         self.course_data["description"] = self.course_data["description"].fillna("")
 
         # Initialize TF-IDF Vectorizer with max_features to limit vocabulary size
-        self.tfidf_vectorizer = TfidfVectorizer(stop_words="english", max_features=5000) # Added max_features
+        self.tfidf_vectorizer = TfidfVectorizer(
+            stop_words="english", max_features=5000
+        )  # Added max_features
         self.course_vectors = self.tfidf_vectorizer.fit_transform(
             self.course_data["description"]
         )
@@ -95,9 +97,9 @@ class RecommendationModel:
         self.indexed_course_info = (
             self.course_data[["id", "url"]].reset_index().to_dict(orient="records")
         )
-        
+
         # Clear the full course_data DataFrame to free up memory
-        self.course_data = pd.DataFrame() 
+        self.course_data = pd.DataFrame()
 
         logger.info(
             f"Recommendation model trained with {len(self.indexed_course_info)} courses."
@@ -116,7 +118,7 @@ class RecommendationModel:
                 ),
             )
             mlflow.log_param("num_courses", len(self.course_data))
-            mlflow.log_param("vectorizer_type", "tfidf_max_features") # Log this change
+            mlflow.log_param("vectorizer_type", "tfidf_max_features")  # Log this change
             logger.info(
                 f"TF-IDF model logged to MLflow under model name: {self.model_name}"
             )
@@ -133,11 +135,15 @@ class RecommendationModel:
 
             # Re-train only if the model couldn't be loaded or if data is empty
             if self.model is None or not self.course_data:
-                logger.info("Model not loaded or course data empty, attempting to train.")
+                logger.info(
+                    "Model not loaded or course data empty, attempting to train."
+                )
                 self.train(db_session=db_session)  # Pass db_session to train
 
         except Exception as e:
-            logger.error(f"Failed to load model 'CourseRecommendationModel' version 'latest' from MLflow: {e}")
+            logger.error(
+                f"Failed to load model 'CourseRecommendationModel' version 'latest' from MLflow: {e}"
+            )
             # Fallback to training if loading fails
             logger.info("Attempting to train model due to loading failure.")
             self.train(db_session=db_session)  # Pass db_session to train
@@ -198,14 +204,18 @@ class RecommendationModel:
         # Check if model is ready
         if (
             not self.tfidf_vectorizer
-            or (self.course_vectors is not None and self.course_vectors.size == 0)  # Check if course_vectors is not empty
+            or (
+                self.course_vectors is not None and self.course_vectors.size == 0
+            )  # Check if course_vectors is not empty
             or not self.indexed_course_info  # Check if indexed_course_info is populated
         ):
             logger.warning(
                 "Recommendation model not fully trained or loaded",
                 extra={
                     "has_vectorizer": bool(self.tfidf_vectorizer),
-                    "has_course_vectors": (self.course_vectors is not None and self.course_vectors.size > 0),
+                    "has_course_vectors": (
+                        self.course_vectors is not None and self.course_vectors.size > 0
+                    ),
                     "has_indexed_course_info": bool(self.indexed_course_info),
                 },
             )
@@ -219,7 +229,11 @@ class RecommendationModel:
 
         # Find the index of the reference course in the indexed_course_info
         ref_course_idx = next(
-            (i for i, d in enumerate(self.indexed_course_info) if d["url"] == course_url),
+            (
+                i
+                for i, d in enumerate(self.indexed_course_info)
+                if d["url"] == course_url
+            ),
             None,
         )
 
@@ -246,10 +260,14 @@ class RecommendationModel:
         recommended_courses = []
         for idx in similar_courses_indices:
             # Get the original course ID and URL from the indexed info
-            original_idx_data = next((d for d in self.indexed_course_info if d["index"] == idx), None)
-            
+            original_idx_data = next(
+                (d for d in self.indexed_course_info if d["index"] == idx), None
+            )
+
             if original_idx_data is None:
-                logger.warning(f"Could not find indexed course data for index {idx}. Skipping.")
+                logger.warning(
+                    f"Could not find indexed course data for index {idx}. Skipping."
+                )
                 continue
 
             course_id = original_idx_data["id"]
@@ -270,7 +288,9 @@ class RecommendationModel:
                     }
                 )
             else:
-                logger.warning(f"Full details not found for recommended course URL: {course_url_rec}")
+                logger.warning(
+                    f"Full details not found for recommended course URL: {course_url_rec}"
+                )
 
             if len(recommended_courses) >= top_n:
                 break
@@ -285,9 +305,13 @@ if __name__ == "__main__":
     print("--- Recommendation Model Module ---")
     # Example usage (assuming a database is set up and populated)
     from src.data_engineering.db_utils import SessionLocal
-    from src.api.v1.crud import create_course, get_course_by_url, get_courses # Added get_courses
+    from src.api.v1.crud import (
+        create_course,
+        get_course_by_url,
+        get_courses,
+    )  # Added get_courses
     from src.api.v1.schemas import CourseCreate
-    import os # Added import for os
+    import os  # Added import for os
 
     # Ensure MLflow tracking URI is set
     # os.environ["MLFLOW_TRACKING_URI"] = "./mlruns" # This is set in __init__ for consistency
@@ -302,32 +326,32 @@ if __name__ == "__main__":
                 CourseCreate(
                     title="Data Science Fundamentals",
                     description="Introduction to data science concepts.",
-                    url="http://example.com/ds-fundamentals", # Fixed URL type hint warning
+                    url="http://example.com/ds-fundamentals",  # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Machine Learning Basics",
                     description="Core machine learning algorithms.",
-                    url="http://example.com/ml-basics", # Fixed URL type hint warning
+                    url="http://example.com/ml-basics",  # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Advanced Python Programming",
                     description="Deep dive into Python for advanced users.",
-                    url="http://example.com/adv-python", # Fixed URL type hint warning
+                    url="http://example.com/adv-python",  # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="SQL for Data Analysts",
                     description="Essential SQL for data manipulation.",
-                    url="http://example.com/sql-analysts", # Fixed URL type hint warning
+                    url="http://example.com/sql-analysts",  # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Deep Learning with PyTorch",
                     description="Neural networks and deep learning using PyTorch.",
-                    url="http://example.com/dl-pytorch", # Fixed URL type hint warning
+                    url="http://example.com/dl-pytorch",  # Fixed URL type hint warning
                 ),
                 CourseCreate(
                     title="Introduction to Web Development",
                     description="Basics of front-end and back-end web development.",
-                    url="http://example.com/web-dev", # Fixed URL type hint warning
+                    url="http://example.com/web-dev",  # Fixed URL type hint warning
                 ),
             ]
             for dc in dummy_courses:

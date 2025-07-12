@@ -20,8 +20,8 @@ logger.info(
         "database_host": settings.DB_HOST,
         "database_name": settings.DB_NAME,
         "database_user": settings.DB_USER,
-        "environment": settings.ENVIRONMENT
-    }
+        "environment": settings.ENVIRONMENT,
+    },
 )
 
 # Create SQLAlchemy engine with connection pooling and error handling
@@ -33,28 +33,30 @@ try:
         echo=(settings.ENVIRONMENT == "development"),  # SQL logging in development
         connect_args={
             "connect_timeout": 10,
-            "options": "-c statement_timeout=30000"  # 30 second statement timeout
-        }
+            "options": "-c statement_timeout=30000",  # 30 second statement timeout
+        },
     )
-    
+
     # Add event listeners for logging
     @event.listens_for(engine, "connect")
     def receive_connect(dbapi_connection, connection_record):
-        logger.info("Database connection established", extra={"performance_metric": True})
-    
+        logger.info(
+            "Database connection established", extra={"performance_metric": True}
+        )
+
     @event.listens_for(engine, "checkout")
     def receive_checkout(dbapi_connection, connection_record, connection_proxy):
         logger.debug("Database connection checked out from pool")
-    
+
     @event.listens_for(engine, "checkin")
     def receive_checkin(dbapi_connection, connection_record):
         logger.debug("Database connection returned to pool")
-        
+
 except Exception as e:
     logger.error(
         f"Failed to create database engine: {str(e)}",
         extra={"error_type": type(e).__name__},
-        exc_info=True
+        exc_info=True,
     )
     raise
 
@@ -72,21 +74,18 @@ def get_db():
     """
     start_time = time.time()
     db = SessionLocal()
-    
+
     try:
         logger.debug("Database session created")
         yield db
-        
+
         # Log successful session completion
         duration = time.time() - start_time
         logger.debug(
             f"Database session completed successfully",
-            extra={
-                "performance_metric": True,
-                "duration_seconds": duration
-            }
+            extra={"performance_metric": True, "duration_seconds": duration},
         )
-        
+
     except Exception as e:
         # Log session errors
         duration = time.time() - start_time
@@ -95,12 +94,12 @@ def get_db():
             extra={
                 "performance_metric": True,
                 "duration_seconds": duration,
-                "error_type": type(e).__name__
+                "error_type": type(e).__name__,
             },
-            exc_info=True
+            exc_info=True,
         )
         raise
-        
+
     finally:
         db.close()
         logger.debug("Database session closed")
@@ -122,8 +121,8 @@ def test_database_connection():
                 extra={
                     "performance_metric": True,
                     "db_operation": "test_connection",
-                    "duration_seconds": duration
-                }
+                    "duration_seconds": duration,
+                },
             )
             return True
     except Exception as e:
@@ -134,8 +133,8 @@ def test_database_connection():
                 "error_type": type(e).__name__,
                 "performance_metric": True,
                 "db_operation": "test_connection",
-                "duration_seconds": duration
+                "duration_seconds": duration,
             },
-            exc_info=True
+            exc_info=True,
         )
         return False

@@ -4,7 +4,7 @@ from typing import List, Optional
 import time
 
 from src.data_engineering.db_utils import get_db
-from src.api.v1 import schemas # Import schemas for type hinting
+from src.api.v1 import schemas  # Import schemas for type hinting
 from src.api.v1.schemas import Course  # We'll need Course for the response
 from src.model_development.recommendation.recommendation_model import (
     RecommendationModel,
@@ -12,7 +12,7 @@ from src.model_development.recommendation.recommendation_model import (
 from src.utils.logging_utils import setup_logging, log_api_request
 from src.api.v1.exceptions import DatabaseError
 from src.api.v1 import crud  # Import crud for fallback
-from src.api.v1.security import get_current_active_user # Corrected import path
+from src.api.v1.security import get_current_active_user  # Corrected import path
 
 logger = setup_logging(__name__)
 
@@ -27,49 +27,49 @@ reco_model = RecommendationModel()
 async def startup_event():
     logger.info("Initializing Recommendation Model on startup...")
     start_time = time.time()
-    
+
     with next(get_db()) as db:
         try:
             # Try to load existing model
             model_start = time.time()
             reco_model.load_model(db_session=db)
             model_duration = time.time() - model_start
-            
+
             logger.info(
                 "Recommendation Model loaded successfully on startup",
                 extra={
                     "performance_metric": True,
                     "operation": "model_load",
-                    "duration_seconds": model_duration
-                }
+                    "duration_seconds": model_duration,
+                },
             )
         except Exception as e:
             logger.warning(
                 f"Failed to load Recommendation Model on startup: {str(e)}",
                 extra={"error_type": type(e).__name__},
-                exc_info=True
+                exc_info=True,
             )
             db.rollback()  # Explicitly rollback on error
-            
+
             # Train model as fallback
             train_start = time.time()
             try:
                 reco_model.train(db_session=db)
                 train_duration = time.time() - train_start
-                
+
                 logger.info(
                     "Recommendation Model trained successfully as fallback",
                     extra={
                         "performance_metric": True,
                         "operation": "model_train",
-                        "duration_seconds": train_duration
-                    }
+                        "duration_seconds": train_duration,
+                    },
                 )
             except Exception as train_error:
                 logger.error(
                     f"Failed to train Recommendation Model: {str(train_error)}",
                     extra={"error_type": type(train_error).__name__},
-                    exc_info=True
+                    exc_info=True,
                 )
                 db.rollback()  # Explicitly rollback on error
                 raise
@@ -79,7 +79,7 @@ async def startup_event():
         retrain_start = time.time()
         reco_model.retrain_model_if_needed(db_session=db)
         retrain_duration = time.time() - retrain_start
-        
+
         total_duration = time.time() - start_time
         logger.info(
             "Recommendation Model initialization complete",
@@ -87,8 +87,8 @@ async def startup_event():
                 "performance_metric": True,
                 "operation": "model_initialization",
                 "total_duration_seconds": total_duration,
-                "retrain_check_duration_seconds": retrain_duration
-            }
+                "retrain_check_duration_seconds": retrain_duration,
+            },
         )
 
 
@@ -103,7 +103,7 @@ async def get_course_recommendations(
     user_id: int,  # Placeholder for user ID (for future personalized recs)
     course_history_urls: Optional[List[str]] = None,
     num_recommendations: int = 5,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Retrieves a list of recommended courses based on user history.
@@ -117,21 +117,27 @@ async def get_course_recommendations(
         extra={
             "user_id": user_id,
             "history_count": len(course_history_urls) if course_history_urls else 0,
-            "num_recommendations": num_recommendations
-        }
+            "num_recommendations": num_recommendations,
+        },
     )
-    
+
     # Check if model is ready
     if (
         not reco_model.tfidf_vectorizer
-        or (reco_model.course_vectors is not None and reco_model.course_vectors.size == 0)
+        or (
+            reco_model.course_vectors is not None
+            and reco_model.course_vectors.size == 0
+        )
         or not reco_model.indexed_course_info
     ):
         logger.warning(
             "Recommendation model not fully trained or loaded",
             extra={
                 "has_vectorizer": bool(reco_model.tfidf_vectorizer),
-                "has_course_vectors": (reco_model.course_vectors is not None and reco_model.course_vectors.size > 0),
+                "has_course_vectors": (
+                    reco_model.course_vectors is not None
+                    and reco_model.course_vectors.size > 0
+                ),
                 "has_indexed_course_info": bool(reco_model.indexed_course_info),
             },
         )
@@ -192,31 +198,30 @@ async def get_course_recommendations(
                 "user_id": user_id,
                 "recommendation_count": len(recommended_courses),
                 "duration_seconds": total_duration,
-                "course_history_count": len(course_history_urls) if course_history_urls else 0
-            }
+                "course_history_count": (
+                    len(course_history_urls) if course_history_urls else 0
+                ),
+            },
         )
-        
+
         return recommended_courses
-        
+
     except DatabaseError as e:
         logger.error(
             f"Database error in recommendations: {str(e)}",
-            extra={
-                "user_id": user_id,
-                "error_type": type(e).__name__
-            }
+            extra={"user_id": user_id, "error_type": type(e).__name__},
         )
         raise HTTPException(status_code=e.status_code, detail=e.detail)
-        
+
     except Exception as e:
         logger.error(
             f"Error generating recommendations for user {user_id}: {str(e)}",
             extra={
                 "user_id": user_id,
                 "error_type": type(e).__name__,
-                "course_history_urls": course_history_urls
+                "course_history_urls": course_history_urls,
             },
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -61,6 +61,6 @@ logger.info(
         "environment": settings.ENVIRONMENT,
         "database_host": settings.DB_HOST,
         "database_name": settings.DB_NAME,
-        "log_level": settings.LOG_LEVEL
-    }
+        "log_level": settings.LOG_LEVEL,
+    },
 )

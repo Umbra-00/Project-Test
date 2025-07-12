@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
-from src.core.config import settings # Import settings
+from src.core.config import settings  # Import settings
 from src.utils.logging_utils import setup_logging  # Import the new logging utility
 
 # from urllib.parse import quote_plus # This is no longer needed
@@ -19,7 +19,7 @@ logger = setup_logging(__name__)
 
 # --- Configuration ---
 # The DATABASE_URL is now expected to be the full connection string directly.
-DATABASE_URL = settings.DATABASE_URL # Use settings.DATABASE_URL
+DATABASE_URL = settings.DATABASE_URL  # Use settings.DATABASE_URL
 
 
 # --- Temporary debug prints ---
