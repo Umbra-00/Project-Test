@@ -103,8 +103,7 @@ async def get_course_recommendations(
     user_id: int,  # Placeholder for user ID (for future personalized recs)
     course_history_urls: Optional[List[str]] = None,
     num_recommendations: int = 5,
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user) # Add this line
+    db: Session = Depends(get_db)
 ):
     """
     Retrieves a list of recommended courses based on user history.

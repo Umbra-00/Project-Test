@@ -19,6 +19,8 @@ app = FastAPI(
     description="API for managing educational content, learning progress, and recommendations.",
     version="1.0.0",
     root_path="/api/v1",  # Explicitly set the root path for the application
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 # Include routers for different API functionalities.

@@ -25,8 +25,7 @@ router = APIRouter()
 @log_api_request
 async def ingest_courses(
     course_data_list: List[CourseCreate], 
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user) # Add this line
+    db: Session = Depends(get_db)
 ):
     """
     Ingests a list of course data into the database.
