@@ -2,10 +2,11 @@ import streamlit as st
 import requests
 import json
 import urllib.parse # For URL encoding
+import os
 
 
 # --- Configuration ---
-FASTAPI_BASE_URL = "http://localhost:8000/api/v1" # Local testing URL
+FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://umbra-backend:8000/api/v1")
 
 st.set_page_config(layout="wide", page_title="Umbra Educational Data Platform")
 
@@ -14,19 +15,18 @@ st.set_page_config(layout="wide", page_title="Umbra Educational Data Platform")
 def fetch_courses(
     skip: int = 0,
     limit: int = 100,
-    sort_by: str = None,
+    sort_by: str = "",
     sort_order: str = "asc",
-    filter_criteria: dict = None,
+    filter_criteria: dict = {},
 ):
     params = {
         "skip": skip,
         "limit": limit,
     }
-    if sort_by:
+    if sort_by and isinstance(sort_by, str) and sort_by != "None":
         params["sort_by"] = sort_by
         params["sort_order"] = sort_order
     if filter_criteria:
-        # FastAPI expects JSON string for complex filters
         params["filter_criteria"] = json.dumps(filter_criteria)
 
     try:
@@ -178,10 +178,11 @@ with tab1:
         current_filter_criteria["difficulty"] = filter_difficulty
 
     if st.button("Fetch Courses"):
+        # Fetch and display courses
         courses = fetch_courses(
-            sort_by=selected_sort_by,
+            sort_by=selected_sort_by or "",
             sort_order=sort_order,
-            filter_criteria=current_filter_criteria if current_filter_criteria else None,
+            filter_criteria=current_filter_criteria,
         )
 
         if courses:
