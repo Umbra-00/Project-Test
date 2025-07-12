@@ -52,7 +52,7 @@ services:
     name: mlflow-tracking-server
     plan: starter
     buildCommand: echo "No build command needed for MLflow Docker image"
-    startCommand: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri ${DATABASE_URL} --artifacts-destination /mlruns
+    startCommand: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri $(MLFLOW_BACKEND_STORE_URI) --artifacts-destination /mlruns
     disk:
       name: mlflow-artifacts
       mountPath: /mlruns
@@ -64,8 +64,11 @@ services:
           property: connectionString
       - key: MLFLOW_ENABLE_TRACKING_SERVER
         value: "true"
-    image:
-      url: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Corrected image format
+      - key: MLFLOW_BACKEND_STORE_URI
+        fromDatabase:
+          name: umbra-postgres
+          property: connectionString
+    image: ghcr.io/philipmay/mlflow-image:2.10.0-r3 # Corrected image format
 
   - type: worker
     name: umbra-migrate-db
