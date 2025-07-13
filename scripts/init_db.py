@@ -13,8 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from sqlalchemy import create_engine, text
-from src.core.database import Base
-from src.data_engineering.database_models import Course, User
+from src.data_engineering.database_models import Base, Course, User, Content, LearningProgress, Assessment, AssessmentResult, Interaction, LearningPath, UserLearningPath, SkillAssessment
 from src.core.logging_config import setup_logging
 
 logger = setup_logging()
