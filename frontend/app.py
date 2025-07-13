@@ -121,7 +121,7 @@ def validate_json_input(json_string: str):
             "instructor",
             "price",
             "currency",
-            "difficulty", # Changed from difficulty_level to difficulty to match CourseCreate schema based on prior discussions
+            "difficulty_level",  # Aligned with database model and API schema
             "category",
             "platform",
         ]
@@ -219,8 +219,8 @@ with tab1:
                 st.write(f"**URL:** {course.get('url', 'N/A')}")
                 if course.get("description"):
                     st.write(f"**Description:** {course['description']}")
-                if course.get("difficulty"):
-                    st.write(f"**Difficulty:** {course['difficulty']}")
+                if course.get("difficulty_level"):
+                    st.write(f"**Difficulty:** {course['difficulty_level']}")
                 if course.get("category"):
                     st.write(f"**Category:** {course['category']}")
                 st.markdown("---")
