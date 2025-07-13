@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from src.data_engineering.db_utils import check_db_health
 from src.utils.logging_utils import setup_logging
-from src.api.v1.endpoints import courses, recommendations, users  # Import users router
+from src.api.v1.endpoints import courses, recommendations, users, learning_paths  # Import routers
 from src.api.v1.exceptions import (
     DatabaseError,
     NotFoundError,
@@ -29,6 +29,7 @@ app.include_router(
     recommendations.router, prefix="/recommendations", tags=["Recommendations"]
 )
 app.include_router(users.router, tags=["Users"])  # Include the users router
+app.include_router(learning_paths.router, prefix="/learning-paths", tags=["Learning Paths"])  # Include the learning paths router
 
 
 # --- Global Exception Handlers ---

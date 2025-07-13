@@ -42,12 +42,7 @@ services:
         fromService:
           name: umbra-backend
           type: web
-          property: hostport
-      - key: FASTAPI_BASE_URL
-        fromService:
-          name: umbra-backend
-          type: web
-          property: hostport
+          property: url
 
   - type: pserv
     name: mlflow-tracking-server

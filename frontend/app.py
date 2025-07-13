@@ -1,17 +1,19 @@
 import streamlit as st
 import requests
 import json
-import urllib.parse # For URL encoding
+import urllib.parse  # For URL encoding
 import os
 
 # --- Configuration ---
-FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://umbra-backend:10000/api/v1")
+# Use Render's external URL if available, otherwise default to local for development
+FASTAPI_BASE_URL = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
+API_URL = f"{FASTAPI_BASE_URL}/api/v1"
 
 # Ensure the base URL has a scheme
 if not FASTAPI_BASE_URL.startswith("http://") and not FASTAPI_BASE_URL.startswith("https://"):
     FASTAPI_BASE_URL = "http://" + FASTAPI_BASE_URL
 
-st.set_page_config(layout="wide", page_title="Umbra Educational Data Platform")
+st.set_page_config(layout="wide", page_title="Umbra Personalized Learning Platform")
 
 
 # --- Helper Functions for API Calls ---
@@ -149,10 +151,26 @@ def validate_json_input(json_string: str):
 
 
 # --- Streamlit UI ---
-st.title("🎓 Umbra Educational Data Platform")
-st.markdown("A simplified platform to browse and ingest educational course data.")
+st.title("🎯 Umbra Personalized Learning Platform")
+st.markdown("""
+**Your Journey, Your Way** 🚀
 
-tab1, tab2 = st.tabs(["Browse Courses", "Ingest New Course"])
+Welcome to a learning platform that adapts to YOU. Discover courses, build personalized learning paths, 
+and achieve your goals at your own pace. Every learner is unique - let's find your perfect learning structure.
+""")
+
+# Add a sidebar for user info (placeholder for now)
+with st.sidebar:
+    st.header("🧭 Your Learning Journey")
+    st.info("""
+    **Coming Soon:**
+    - Personal skill assessment
+    - Custom learning paths
+    - Progress tracking
+    - AI-powered recommendations
+    """)
+
+tab1, tab2, tab3 = st.tabs(["📚 Discover Courses", "➕ Add Course", "🎯 Learning Paths"])
 
 with tab1:
     st.header("Available Courses")
@@ -251,3 +269,93 @@ Example:
                 st.json(result)
             else:
                 st.error("Failed to ingest course.")
+
+with tab3:
+    st.header("🎯 Personalized Learning Paths")
+    
+    st.markdown("""
+    **Create Your Learning Journey**
+    
+    Learning paths are structured sequences of courses designed to help you achieve specific goals.
+    Whether you want to become a data scientist, web developer, or master a new skill, 
+    we'll help you create the perfect roadmap.
+    """)
+    
+    # Placeholder for learning path functionality
+    st.info("🚧 **Coming Soon!** 🚧")
+    
+    with st.expander("Preview: What Learning Paths Will Offer"):
+        st.markdown("""
+        **🎯 Goal-Oriented Paths:**
+        - Career transition paths (e.g., "Marketing to Data Science")
+        - Skill building paths (e.g., "Complete Python Mastery")
+        - Project-based paths (e.g., "Build Your First Web App")
+        
+        **🧠 AI-Powered Personalization:**
+        - Assess your current skill level
+        - Recommend optimal learning sequence
+        - Adapt difficulty based on your progress
+        - Suggest alternative routes when you struggle
+        
+        **📊 Progress Tracking:**
+        - Visual progress indicators
+        - Milestone celebrations
+        - Time estimates and planning tools
+        - Skill portfolio building
+        
+        **👥 Community Features:**
+        - Study groups for path participants
+        - Peer progress sharing
+        - Mentor connections
+        - Success story sharing
+        """)
+    
+    # Sample learning path preview
+    st.subheader("Example Learning Path: Data Science Fundamentals")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("""
+        **Path Overview:**
+        Transform from beginner to confident data scientist in 12 weeks
+        
+        **Prerequisites:** Basic math knowledge
+        **Estimated Time:** 8-10 hours/week
+        **Difficulty:** Beginner to Intermediate
+        """)
+        
+        # Sample path structure
+        path_steps = [
+            {"step": 1, "title": "Python Fundamentals", "duration": "2 weeks", "status": "available"},
+            {"step": 2, "title": "Data Manipulation with Pandas", "duration": "2 weeks", "status": "locked"},
+            {"step": 3, "title": "Data Visualization", "duration": "2 weeks", "status": "locked"},
+            {"step": 4, "title": "Statistics for Data Science", "duration": "2 weeks", "status": "locked"},
+            {"step": 5, "title": "Machine Learning Basics", "duration": "3 weeks", "status": "locked"},
+            {"step": 6, "title": "Capstone Project", "duration": "1 week", "status": "locked"},
+        ]
+        
+        for step in path_steps:
+            status_emoji = "✅" if step["status"] == "completed" else "🔓" if step["status"] == "available" else "🔒"
+            st.markdown(f"{status_emoji} **Step {step['step']}:** {step['title']} *({step['duration']})*")
+    
+    with col2:
+        st.markdown("""
+        **Your Progress**
+        
+        📊 **0% Complete**
+        
+        🎯 **Next Up:**
+        Python Fundamentals
+        
+        ⏱️ **Time Investment:**
+        8-10 hrs/week
+        
+        🏆 **On Completion:**
+        - Portfolio project
+        - Certificate
+        - Job-ready skills
+        """)
+        
+        if st.button("Start This Path", type="primary"):
+            st.success("🎉 Welcome to your Data Science journey! This feature will be available soon.")

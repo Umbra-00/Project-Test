@@ -38,6 +38,7 @@ def sample_course_data():
 @pytest.fixture
 def sample_course_db_object():
     """Sample course database object."""
+    from datetime import datetime
     return Course(
         id=1,
         title="Test Course",
@@ -45,6 +46,8 @@ def sample_course_db_object():
         url="https://example.com/test-course",
         difficulty="Beginner",
         category="Programming",
+        creation_date=datetime.utcnow(),
+        ai_generated_version=1,
     )
 
 

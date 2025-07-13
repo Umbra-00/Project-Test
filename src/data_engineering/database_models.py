@@ -30,10 +30,19 @@ class User(Base):
     registration_date = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime)
     learning_preferences = Column(Text)  # JSON or similar for structured preferences
-
+    
+    # Enhanced user profile for personalization
+    learning_goals = Column(Text)  # JSON: career goals, skill targets, interests
+    current_skill_level = Column(String)  # 'beginner', 'intermediate', 'advanced'
+    preferred_learning_style = Column(String)  # 'visual', 'auditory', 'kinesthetic', 'mixed'
+    time_availability = Column(String)  # 'low', 'medium', 'high' or hours per week
+    career_field = Column(String)  # Target career field
+    
     # Relationships
     progress = relationship("LearningProgress", back_populates="user")
     interactions = relationship("Interaction", back_populates="user")
+    learning_paths = relationship("UserLearningPath", back_populates="user")
+    skill_assessments = relationship("SkillAssessment", back_populates="user")
 
     __table_args__ = (Index("idx_user_user_identifier", "user_identifier"),)
 
@@ -50,7 +59,7 @@ class Course(Base):
     instructor = Column(String)  # New field
     price = Column(Float)  # New field
     currency = Column(String)  # New field
-    difficulty = Column(String)  # New field
+    # difficulty = Column(String)  # Removed duplicate field
     category = Column(String)  # New field
     platform = Column(String)  # New field
     created_by_user_id = Column(
@@ -201,3 +210,100 @@ class Interaction(Base):
 
     def __repr__(self):
         return f"<Interaction(user_id={self.user_id}, type='{self.interaction_type}', timestamp='{self.timestamp}')>"
+
+
+class LearningPath(Base):
+    __tablename__ = "learning_paths"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    description = Column(Text)
+    category = Column(String)  # 'web-development', 'data-science', 'machine-learning', etc.
+    difficulty_level = Column(String)  # 'beginner', 'intermediate', 'advanced'
+    estimated_duration_hours = Column(Integer)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"))
+    creation_date = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+    
+    # Relationships
+    creator = relationship("User")
+    path_courses = relationship("LearningPathCourse", back_populates="learning_path")
+    user_paths = relationship("UserLearningPath", back_populates="learning_path")
+    
+    __table_args__ = (
+        Index("idx_learning_path_category", "category"),
+        Index("idx_learning_path_difficulty", "difficulty_level"),
+    )
+    
+    def __repr__(self):
+        return f"<LearningPath(id={self.id}, name='{self.name}', category='{self.category}')>"
+
+
+class LearningPathCourse(Base):
+    __tablename__ = "learning_path_courses"
+    id = Column(Integer, primary_key=True)
+    learning_path_id = Column(Integer, ForeignKey("learning_paths.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False)
+    sequence_order = Column(Integer, nullable=False)  # Order in the path
+    is_required = Column(Boolean, default=True)  # True if required, False if optional
+    
+    # Relationships
+    learning_path = relationship("LearningPath", back_populates="path_courses")
+    course = relationship("Course")
+    
+    __table_args__ = (
+        Index("idx_learning_path_course_path_id", "learning_path_id"),
+        Index("idx_learning_path_course_sequence", "learning_path_id", "sequence_order"),
+    )
+    
+    def __repr__(self):
+        return f"<LearningPathCourse(path_id={self.learning_path_id}, course_id={self.course_id}, order={self.sequence_order})>"
+
+
+class UserLearningPath(Base):
+    __tablename__ = "user_learning_paths"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    learning_path_id = Column(Integer, ForeignKey("learning_paths.id"), nullable=False)
+    started_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime)
+    is_completed = Column(Boolean, default=False)
+    current_course_id = Column(Integer, ForeignKey("courses.id"))  # Current course in the path
+    progress_percentage = Column(Float, default=0.0)
+    
+    # Relationships
+    user = relationship("User", back_populates="learning_paths")
+    learning_path = relationship("LearningPath", back_populates="user_paths")
+    current_course = relationship("Course")
+    
+    __table_args__ = (
+        Index("idx_user_learning_path_user_id", "user_id"),
+        Index("idx_user_learning_path_path_id", "learning_path_id"),
+        Index("idx_user_learning_path_user_path", "user_id", "learning_path_id", unique=True),
+    )
+    
+    def __repr__(self):
+        return f"<UserLearningPath(user_id={self.user_id}, path_id={self.learning_path_id}, progress={self.progress_percentage:.1f}%)>"
+
+
+class SkillAssessment(Base):
+    __tablename__ = "skill_assessments"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    skill_name = Column(String, nullable=False)  # e.g., 'Python', 'JavaScript', 'Data Analysis'
+    skill_level = Column(String, nullable=False)  # 'beginner', 'intermediate', 'advanced'
+    assessment_date = Column(DateTime, default=datetime.utcnow)
+    score = Column(Float)  # Assessment score (0-100)
+    assessment_type = Column(String)  # 'self-reported', 'quiz', 'project', 'peer-review'
+    evidence_url = Column(String)  # Link to portfolio/project demonstrating skill
+    
+    # Relationships
+    user = relationship("User", back_populates="skill_assessments")
+    
+    __table_args__ = (
+        Index("idx_skill_assessment_user_id", "user_id"),
+        Index("idx_skill_assessment_skill", "skill_name"),
+        Index("idx_skill_assessment_user_skill", "user_id", "skill_name"),
+    )
+    
+    def __repr__(self):
+        return f"<SkillAssessment(user_id={self.user_id}, skill='{self.skill_name}', level='{self.skill_level}')>"
