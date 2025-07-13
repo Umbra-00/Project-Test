@@ -42,7 +42,7 @@ services:
         fromService:
           name: umbra-backend
           type: web
-          property: url
+          property: hostport
 
   - type: pserv
     name: mlflow-tracking-server

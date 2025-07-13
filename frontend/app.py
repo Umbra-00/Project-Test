@@ -5,13 +5,21 @@ import urllib.parse  # For URL encoding
 import os
 
 # --- Configuration ---
-# Use Render's external URL if available, otherwise default to local for development
-FASTAPI_BASE_URL = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
-API_URL = f"{FASTAPI_BASE_URL}/api/v1"
+# Get backend URL from Render environment variable or use local default
+backend_url = os.getenv("BACKEND_URL", "localhost:8000")
 
-# Ensure the base URL has a scheme
-if not FASTAPI_BASE_URL.startswith("http://") and not FASTAPI_BASE_URL.startswith("https://"):
-    FASTAPI_BASE_URL = "http://" + FASTAPI_BASE_URL
+# Convert hostport format to full URL
+if backend_url.startswith("http://") or backend_url.startswith("https://"):
+    FASTAPI_BASE_URL = backend_url
+else:
+    # For Render deployment, use https for external services
+    if "onrender.com" in backend_url:
+        FASTAPI_BASE_URL = f"https://{backend_url}"
+    else:
+        # For local development
+        FASTAPI_BASE_URL = f"http://{backend_url}"
+
+API_URL = f"{FASTAPI_BASE_URL}/api/v1"
 
 st.set_page_config(layout="wide", page_title="Umbra Personalized Learning Platform")
 
