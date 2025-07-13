@@ -38,7 +38,7 @@ def fetch_courses(
 
     try:
         response = requests.get(
-            f"{FASTAPI_BASE_URL}/courses/", params=params, timeout=(10, 10)
+            f"{API_URL}/courses/", params=params, timeout=(10, 10)
         )
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
         return response.json()
@@ -47,7 +47,7 @@ def fetch_courses(
         return []
 
 def post_courses(course_data: list):
-    url = f"{FASTAPI_BASE_URL}/courses/"
+    url = f"{API_URL}/courses/"
     headers = {"Content-Type": "application/json"}
     try:
         response = requests.post(url, headers=headers, data=json.dumps(course_data), timeout=(10, 10))
@@ -59,9 +59,11 @@ def post_courses(course_data: list):
         )
         return None
     except requests.exceptions.HTTPError as e:
-        st.error(
-            f"HTTP Error: {e.response.status_code} - {e.response.json().get('detail', 'Unknown error')}"
-        )
+        try:
+            error_detail = e.response.json().get('detail', 'Unknown error')
+        except ValueError:
+            error_detail = e.response.text if hasattr(e.response, 'text') else 'Unknown error'
+        st.error(f"HTTP Error: {e.response.status_code} - {error_detail}")
         return None
     except Exception as e:
         st.error(f"An unexpected error occurred during POST: {e}")
@@ -70,7 +72,7 @@ def post_courses(course_data: list):
 def get_course_by_url(course_url: str):
     # URL-encode the course_url to handle special characters correctly in the path
     encoded_url = urllib.parse.quote(course_url, safe='')
-    url = f"{FASTAPI_BASE_URL}/courses/{encoded_url}"
+    url = f"{API_URL}/courses/{encoded_url}"
     try:
         response = requests.get(url, timeout=(10, 10))
         response.raise_for_status()
@@ -84,9 +86,11 @@ def get_course_by_url(course_url: str):
         if e.response.status_code == 404:
             st.warning(f"Course not found: {course_url}")
         else:
-            st.error(
-                f"HTTP Error: {e.response.status_code} - {e.response.json().get('detail', 'Unknown error')}"
-            )
+            try:
+                error_detail = e.response.json().get('detail', 'Unknown error')
+            except ValueError:
+                error_detail = e.response.text if hasattr(e.response, 'text') else 'Unknown error'
+            st.error(f"HTTP Error: {e.response.status_code} - {error_detail}")
         return None
     except Exception as e:
         st.error(f"An unexpected error occurred during GET course by URL: {e}")
@@ -278,86 +282,55 @@ with tab3:
     st.markdown("""
     **Create Your Learning Journey**
     
-    Learning paths are structured sequences of courses designed to help you achieve specific goals.
-    Whether you want to become a data scientist, web developer, or master a new skill, 
-    we'll help you create the perfect roadmap.
+    Learning paths help you organize courses in a way that makes sense for YOUR learning style and goals.
+    Instead of random course browsing, get a structured approach that adapts to how you learn best.
     """)
     
-    # Placeholder for learning path functionality
-    st.info("🚧 **Coming Soon!** 🚧")
+    # Current functionality
+    st.markdown("""
+    **🎯 What Learning Paths Offer:**
+    - **Personalized Sequences**: Courses arranged based on your skill level and learning preferences
+    - **Adaptive Learning**: System learns from your progress and adjusts recommendations
+    - **Multiple Learning Styles**: Visual, hands-on, theoretical - choose what works for you
+    - **Flexible Pacing**: Learn at your own speed, pause and resume anytime
+    - **Smart Recommendations**: AI suggests next courses based on your interests and progress
+    """)
     
-    with st.expander("Preview: What Learning Paths Will Offer"):
-        st.markdown("""
-        **🎯 Goal-Oriented Paths:**
-        - Career transition paths (e.g., "Marketing to Data Science")
-        - Skill building paths (e.g., "Complete Python Mastery")
-        - Project-based paths (e.g., "Build Your First Web App")
-        
-        **🧠 AI-Powered Personalization:**
-        - Assess your current skill level
-        - Recommend optimal learning sequence
-        - Adapt difficulty based on your progress
-        - Suggest alternative routes when you struggle
-        
-        **📊 Progress Tracking:**
-        - Visual progress indicators
-        - Milestone celebrations
-        - Time estimates and planning tools
-        - Skill portfolio building
-        
-        **👥 Community Features:**
-        - Study groups for path participants
-        - Peer progress sharing
-        - Mentor connections
-        - Success story sharing
-        """)
+    # Simple example
+    st.subheader("Example: Python Learning Path")
     
-    # Sample learning path preview
-    st.subheader("Example Learning Path: Data Science Fundamentals")
-    
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([3, 1])
     
     with col1:
         st.markdown("""
-        **Path Overview:**
-        Transform from beginner to confident data scientist in 12 weeks
+        **Beginner → Intermediate → Advanced**
         
-        **Prerequisites:** Basic math knowledge
-        **Estimated Time:** 8-10 hours/week
-        **Difficulty:** Beginner to Intermediate
+        This path adapts based on:
+        - Your current Python knowledge
+        - Whether you prefer theory or practice
+        - How much time you have available
+        - Your specific interests (web dev, data science, etc.)
         """)
         
         # Sample path structure
         path_steps = [
-            {"step": 1, "title": "Python Fundamentals", "duration": "2 weeks", "status": "available"},
-            {"step": 2, "title": "Data Manipulation with Pandas", "duration": "2 weeks", "status": "locked"},
-            {"step": 3, "title": "Data Visualization", "duration": "2 weeks", "status": "locked"},
-            {"step": 4, "title": "Statistics for Data Science", "duration": "2 weeks", "status": "locked"},
-            {"step": 5, "title": "Machine Learning Basics", "duration": "3 weeks", "status": "locked"},
-            {"step": 6, "title": "Capstone Project", "duration": "1 week", "status": "locked"},
+            "🔓 Python Basics (Start here)",
+            "🔒 Data Structures (Unlocks after basics)", 
+            "🔒 Web Development OR Data Analysis (Choose your path)",
+            "🔒 Advanced Projects (Based on your choice)"
         ]
         
         for step in path_steps:
-            status_emoji = "✅" if step["status"] == "completed" else "🔓" if step["status"] == "available" else "🔒"
-            st.markdown(f"{status_emoji} **Step {step['step']}:** {step['title']} *({step['duration']})*")
+            st.markdown(f"- {step}")
     
     with col2:
         st.markdown("""
-        **Your Progress**
+        **Your Style**
         
-        📊 **0% Complete**
-        
-        🎯 **Next Up:**
-        Python Fundamentals
-        
-        ⏱️ **Time Investment:**
-        8-10 hrs/week
-        
-        🏆 **On Completion:**
-        - Portfolio project
-        - Certificate
-        - Job-ready skills
+        📊 **Progress**: Tracked
+        🎯 **Goals**: Set by you
+        ⏱️ **Pace**: Your choice
+        🧭 **Direction**: AI-guided
         """)
-        
-        if st.button("Start This Path", type="primary"):
-            st.success("🎉 Welcome to your Data Science journey! This feature will be available soon.")
+    
+    st.info("💡 **Note**: This platform focuses on personalized learning experiences, not certifications or job guarantees. It's about finding the learning approach that works best for YOU.")

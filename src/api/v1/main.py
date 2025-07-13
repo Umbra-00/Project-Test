@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 
 from src.data_engineering.db_utils import check_db_health
 from src.utils.logging_utils import setup_logging
-from src.api.v1.endpoints import courses, recommendations, users, learning_paths  # Import routers
+from src.api.v1.endpoints import courses, users, learning_paths, businesses  # Import routers
+# from src.api.v1.endpoints import recommendations  # Disabled due to ML dependency issues
 from src.api.v1.exceptions import (
     DatabaseError,
     NotFoundError,
@@ -25,11 +26,12 @@ app = FastAPI(
 
 # Include routers for different API functionalities.
 app.include_router(courses.router, prefix="/courses", tags=["Courses"])
-app.include_router(
-    recommendations.router, prefix="/recommendations", tags=["Recommendations"]
-)
+# app.include_router(
+#     recommendations.router, prefix="/recommendations", tags=["Recommendations"]
+# )  # Temporarily disabled due to ML dependency issues
 app.include_router(users.router, tags=["Users"])  # Include the users router
 app.include_router(learning_paths.router, prefix="/learning-paths", tags=["Learning Paths"])  # Include the learning paths router
+app.include_router(businesses.router, prefix="/businesses", tags=["Businesses"])  # Include the businesses router
 
 
 # --- Global Exception Handlers ---

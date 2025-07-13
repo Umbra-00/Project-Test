@@ -187,3 +187,13 @@ class TestAPIDocumentation:
         response = client.get("/openapi.json")
         assert response.status_code == 200
         assert "openapi" in response.json()
+
+
+class TestBusinessesEndpoint:
+    """Test the businesses endpoints."""
+
+    def test_get_businesses_success(self, client):
+        """Test successful retrieval of businesses."""
+        response = client.get("/businesses")
+        assert response.status_code == 200
+        assert response.json() == [{"id": 1, "name": "Example Business"}]

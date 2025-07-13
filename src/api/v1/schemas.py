@@ -8,13 +8,21 @@ class UserBase(BaseModel):
     user_identifier: str  # This will be the user-provided unique ID
 
 
-class UserCreate(BaseModel):
-    username: str
+class UserCreate(UserBase):
+    password: str
     learning_goals: Optional[str] = None  # JSON string with goals
     current_skill_level: Optional[str] = None  # 'beginner', 'intermediate', 'advanced'
     preferred_learning_style: Optional[str] = None  # 'visual', 'auditory', 'kinesthetic', 'mixed'
     time_availability: Optional[str] = None  # 'low', 'medium', 'high'
     career_field: Optional[str] = None  # Target career field
+
+
+class UserUpdate(BaseModel):
+    learning_goals: Optional[str] = None
+    current_skill_level: Optional[str] = None
+    preferred_learning_style: Optional[str] = None
+    time_availability: Optional[str] = None
+    career_field: Optional[str] = None
 
 
 class User(UserBase):

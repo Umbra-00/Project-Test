@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from src.data_engineering.database_models import Course, User
 from src.api.v1.schemas import CourseCreate, UserCreate
-from src.api.v1.exceptions import DatabaseError, ConflictError
+from src.api.v1.exceptions import DatabaseError, ConflictError, NotFoundError
 from typing import List, Optional, Dict, Any
 from src.utils.auth_utils import get_password_hash
 from src.utils.logging_utils import (
@@ -115,3 +115,32 @@ def get_user(db: Session, user_id: int):
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(User).offset(skip).limit(limit).all()
+
+
+def update_user_profile(db: Session, user_id: int, user_update):
+    """
+    Update user profile information.
+    """
+    try:
+        db_user = db.query(User).filter(User.id == user_id).first()
+        if not db_user:
+            raise NotFoundError(detail=f"User with id {user_id} not found")
+        
+        # Update fields if provided
+        if user_update.learning_goals is not None:
+            db_user.learning_goals = user_update.learning_goals
+        if user_update.current_skill_level is not None:
+            db_user.current_skill_level = user_update.current_skill_level
+        if user_update.preferred_learning_style is not None:
+            db_user.preferred_learning_style = user_update.preferred_learning_style
+        if user_update.time_availability is not None:
+            db_user.time_availability = user_update.time_availability
+        if user_update.career_field is not None:
+            db_user.career_field = user_update.career_field
+        
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise DatabaseError(detail=f"Could not update user profile: {e}") from e
