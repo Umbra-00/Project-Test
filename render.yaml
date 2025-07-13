@@ -38,11 +38,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.4
-      - key: BACKEND_URL
-        fromService:
-          name: umbra-backend
-          type: web
-          property: hostport
+      - key: RENDER
+        value: "true"
 
   - type: pserv
     name: mlflow-tracking-server
