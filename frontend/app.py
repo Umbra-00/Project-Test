@@ -3,6 +3,7 @@ import requests
 import json
 import urllib.parse  # For URL encoding
 import os
+import pandas as pd
 
 # --- Configuration ---
 # Determine backend URL based on environment
@@ -32,8 +33,8 @@ def fetch_courses(
     filter_criteria: dict = {},
 ):
     params = {
-        "skip": skip,
-        "limit": limit,
+        "skip": int(skip),
+        "limit": int(limit),
     }
     if sort_by and isinstance(sort_by, str) and sort_by != "None":
         params["sort_by"] = sort_by
@@ -219,16 +220,8 @@ with tab1:
 
         if courses:
             st.subheader(f"Total Courses: {len(courses)}")
-            for course in courses:
-                st.markdown(f"### {course.get('title', 'N/A')}")
-                st.write(f"**URL:** {course.get('url', 'N/A')}")
-                if course.get("description"):
-                    st.write(f"**Description:** {course['description']}")
-                if course.get("difficulty_level"):
-                    st.write(f"**Difficulty:** {course['difficulty_level']}")
-                if course.get("category"):
-                    st.write(f"**Category:** {course['category']}")
-                st.markdown("---")
+            courses_df = pd.DataFrame(courses)
+            st.dataframe(courses_df, use_container_width=True)
         else:
             st.info("No courses found with the current filters and sorting.")
 
@@ -342,71 +335,167 @@ with tab3:
 
 
 with tab4:
-    st.header("About the Umbra Learning Platform: A Technical Deep-Dive")
-
+    st.header("About the Umbra Learning Platform")
+    
     st.markdown("""
-    This platform is engineered from the ground up using a modern, scalable, and maintainable technology stack. Our architecture is built on the principle of **microservices**, where different parts of the application are independent, communicating over a network. This approach allows for greater flexibility, targeted scaling, and easier maintenance.
+    ### Project Purpose
+    The Umbra Educational Data Platform is a proof-of-concept showcasing a modern, scalable, and data-driven web application. It's designed to demonstrate proficiency in building robust backend systems, implementing asynchronous task processing, managing the machine learning lifecycle, and deploying a full-stack application using DevOps best practices. 
+    
+    The core mission is to create a personalized learning experience by analyzing data to adapt to user needs—a common and complex challenge in today's tech landscape.
+    """)
+    st.divider()
+
+    st.subheader("Technology Rationale")
+    st.markdown("""
+    The selected technology stack—FastAPI, Pydantic, SQLAlchemy, Streamlit, PostgreSQL, RabbitMQ, Celery, MLflow, Docker, and Render—represents a strategic and modern approach to building a scalable, maintainable, and high-performance application. Each component has been carefully chosen for its specific strengths, ensuring that the application is well-equipped to meet current requirements while remaining flexible for future growth. This report highlights the rationale behind each technology selection and provides a forward-looking perspective on the project's trajectory, ensuring that the project's value is preserved and showcased effectively.
+
+    ### Detailed Analysis
+    **Backend & API Layer**
+
+    - **FastAPI**
+        FastAPI is chosen for its exceptional speed, intuitive developer experience, and automatic generation of interactive API documentation (OpenAPI/Swagger). Its support for asynchronous programming enables the backend to efficiently handle high-traffic loads and concurrent requests, making it ideal for modern web applications and microservices. This choice ensures that our API is not only performant but also easy to maintain and extend, leveraging its integration with Python's type hints to reduce bugs and enhance developer productivity.
+    - **Pydantic**
+        Pydantic is integrated for strict data validation and serialization at the API boundaries. This ensures that only well-structured, validated data enters or leaves the system, reducing bugs and preventing data corruption. Pydantic models also serve as the backbone for API documentation and type hints, enhancing maintainability and developer productivity. Its performance, driven by Rust-based validation, makes it a robust choice for ensuring data integrity.
+    - **SQLAlchemy/Alembic**
+        SQLAlchemy provides a robust Object-Relational Mapping (ORM) layer, allowing for expressive, Pythonic interaction with relational databases. It supports complex queries, relationships, and migrations, which are essential for evolving data schemas. Coupled with Alembic, schema migrations become version-controlled and reproducible, ensuring smooth upgrades and rollbacks. This combination ensures a maintainable and scalable database layer.
+
+    **Frontend**
+
+    - **Streamlit**
+        Streamlit is selected for its ability to rapidly build interactive, visually appealing data applications and dashboards using only Python. This minimizes frontend complexity and accelerates prototyping, making it ideal for internal tools, analytics, and data-driven interfaces. Its Python-centric approach ensures that developers can focus on functionality without needing to delve into traditional frontend frameworks, enhancing development speed and accessibility.
+
+    **Data, MLOps, & Asynchronous Processing**
+
+    - **PostgreSQL**
+        PostgreSQL is utilized as the primary database for its proven reliability, advanced features, and strong support in the Python ecosystem. It is well-suited for structured, transactional data and scales effectively for enterprise workloads. Its extensibility, including support for JSON and custom data types, makes it a versatile choice for diverse data needs, ensuring robust data management.
+    - **RabbitMQ/Celery**
+        RabbitMQ and Celery form the backbone of the asynchronous task processing system. By delegating long-running or resource-intensive operations to Celery workers via RabbitMQ message queues, the main API remains responsive and non-blocking, which is crucial for user experience and system scalability. This setup ensures that the application can handle background tasks efficiently without compromising performance, leveraging RabbitMQ's reliable messaging and Celery's distributed task queue capabilities.
+    - **MLflow**
+        MLflow is integrated to manage the machine learning lifecycle, including experiment tracking, model packaging, and versioning. S3-compatible object storage is used for storing models and artifacts, ensuring durability and scalability in production MLOps workflows. This combination provides a robust framework for managing machine learning operations, supporting reproducibility and scalability.
+
+    **DevOps & Infrastructure**
+
+    - **Docker/Docker Compose**
+        Docker and Docker Compose are used to containerize the application, guaranteeing consistency across development, testing, and production environments. This approach eliminates environment drift and simplifies both onboarding and deployment. Docker Compose further streamlines multi-container setups, making it easier to manage complex applications, ensuring portability and collaboration.
+    - **Render**
+        Render (Platform-as-a-Service) As it is free it is chosen for cloud hosting, automating infrastructure management tasks such as database provisioning, network configuration, and CI/CD deployments. This enables seamless, Git-driven deployments and abstracts away much of the operational overhead, allowing the team to focus on delivering features. Render's simplicity and scalability make it an excellent choice for hosting the application, with built-in security features like TLS certificates and DDoS protection.
+
+    ### Future-Proofing the Stack
+
+    Technology is constantly evolving, and while our current stack is well-suited for the project's needs, we recognize the importance of staying adaptable. As the project grows and new challenges arise, we will periodically review our technology choices to ensure they continue to align with our goals. This proactive approach will allow us to integrate emerging tools and best practices, keeping our application at the forefront of innovation and efficiency, without implying any current deficiencies.
     """)
 
-    st.subheader("Backend Deep-Dive (The Engine Room)")
-    st.markdown("The backend is a high-performance REST API built with Python.")
-    with st.expander("FastAPI Framework"):
-        st.markdown(f"""
-        - **What it is:** A modern, high-performance web framework for building APIs.
-        - **Why we use it:**
-            - **Speed:** It's one of the fastest Python frameworks available.
-            - **Automatic Interactive Documentation:** It automatically generates interactive API documentation. You can explore this at [http://{APP_HOST}:8000/docs](http://{APP_HOST}:8000/docs).
-            - **Asynchronous Support:** It's built to handle many concurrent requests efficiently.
-        """)
-    with st.expander("Data Persistence & Validation (SQLAlchemy & Pydantic)"):
-        st.markdown("""
-        - **What they are:** SQLAlchemy is an Object-Relational Mapper (ORM) that translates Python objects into database queries. Pydantic is a data validation library.
-        - **Why we use them:** They ensure data integrity and make database interactions safer and more intuitive.
-        """)
-    with st.expander("Database Migrations (Alembic)"):
-        st.markdown("""
-        - **What it is:** A database migration tool for SQLAlchemy.
-        - **Why we use it:** It allows us to manage database schema changes in a systematic, version-controlled way.
-        """)
-    with st.expander("Security (JWT & Passlib)"):
-        st.markdown("""
-        - **What they are:** Libraries for authentication and secure password hashing.
-        - **Why we use them:** They ensure that only authenticated users can access sensitive data.
-        """)
+    st.subheader("Summary Table")
+    tech_summary_data = {
+        "Layer": [
+            "Backend & API", "Backend & API", "Backend & API",
+            "Frontend",
+            "Data & MLOps", "Data & MLOps", "Data & MLOps",
+            "DevOps & Infrastructure", "DevOps & Infrastructure"
+        ],
+        "Technology": [
+            "FastAPI", "Pydantic", "SQLAlchemy/Alembic",
+            "Streamlit",
+            "PostgreSQL", "RabbitMQ/Celery", "MLflow/S3",
+            "Docker/Compose", "Render"
+        ],
+        "Rationale": [
+            "High performance, async support, automatic documentation",
+            "Data validation, serialization, type safety, API schema generation",
+            "Robust ORM, Pythonic DB access, migrations, maintainable schema evolution",
+            "Rapid dashboard/app development, Python-only, minimal frontend complexity",
+            "Reliable, scalable, feature-rich relational database",
+            "Asynchronous task processing, scalability, non-blocking API",
+            "ML lifecycle management, artifact/model storage, production-ready MLOps",
+            "Environment consistency, easy deployment, reproducibility",
+            "Automated cloud hosting, CI/CD, managed infrastructure"
+        ]
+    }
+    tech_summary_df = pd.DataFrame(tech_summary_data)
+    st.table(tech_summary_df)
 
-    st.subheader("Frontend Deep-Dive (The User Experience)")
-    with st.expander("Streamlit Framework"):
-        st.markdown("""
-        - **What it is:** An open-source Python library for creating custom web apps.
-        - **Why we use it:** It allows for rapid development of interactive user interfaces directly in Python.
-        """)
+    st.divider()
 
-    st.subheader("Infrastructure & Core Services")
-    st.markdown("These are the foundational services that support the entire platform.")
-    with st.expander("PostgreSQL Database"):
-        st.markdown("""
-        - **What it is:** A powerful, open-source object-relational database system.
-        - **Why we use it:** It provides a reliable and robust foundation for storing our application's data.
-        """)
-    with st.expander("RabbitMQ (Message Broker)"):
-        st.markdown(f"""
-        - **What it is:** A message broker for asynchronous communication.
-        - **Why we use it:** It makes our platform more scalable and responsive by offloading long-running tasks. You can view the management UI at [http://{APP_HOST}:15672](http://{APP_HOST}:15672) (credentials: `guest`/`guest`).
-        """)
-    with st.expander("MLflow (Machine Learning Operations)"):
-        st.markdown(f"""
-        - **What it is:** A platform to manage the machine learning lifecycle.
-        - **Why we use it:** It helps us track experiments and manage our recommendation models. You can view the UI at [http://{APP_HOST}:5000](http://{APP_HOST}:5000).
-        """)
+    st.subheader("Visual Overview: Architecture & MLOps")
     
-    st.subheader("Deployment & Operations (DevOps)")
-    with st.expander("Docker & Docker Compose"):
-        st.markdown("""
-        - **What they are:** Tools for containerization and orchestration.
-        - **Why we use them:** They ensure our application runs consistently across different environments.
-        """)
-    with st.expander("Render (Cloud Platform)"):
-        st.markdown("""
-        - **What it is:** Our cloud provider for hosting the live application.
-        - **Why we use it:** It provides a seamless deployment experience and manages our production database. You can visit the live application at [https://umbra-frontend.onrender.com](https://umbra-frontend.onrender.com).
-        """)
+    # --- Architecture Diagram ---
+    st.markdown("##### Interactive System Architecture")
+    graphviz_code = """
+    digraph UmbraPlatform {
+        graph [rankdir="TB", splines=ortho, bgcolor="white", fontname="sans-serif", label="Umbra Platform: A Modern Microservices Architecture", fontsize=20, fontcolor="#333333", labelloc="t"];
+        node [shape=box, style="filled,rounded", fontname="sans-serif", fontcolor="#333333"];
+        edge [fontname="sans-serif", fontsize=10, fontcolor="#555555"];
+
+        subgraph cluster_user {
+            label = "Presentation Layer";
+            bgcolor="#e3f2fd";
+            user [label=" End User", shape=circle, style=filled, fillcolor="#fff3e0"];
+            frontend [label="Streamlit Frontend\n(Interactive UI & Dashboards)", fillcolor="#bbdefb"];
+            user -> frontend [label="Views courses, paths,\nand platform insights"];
+        }
+
+        subgraph cluster_backend {
+            label = "Core Services & API Gateway";
+            bgcolor="#f3e5f5";
+            api [label="FastAPI Backend\n(High-Performance API Server)"];
+            security [label="Authentication & Authorization\n(JWT, Passlib)", shape=diamond, style=filled, fillcolor="#e1bee7"];
+            validation [label="Schema & Data Validation\n(Pydantic)", shape=diamond, style=filled, fillcolor="#e1bee7"];
+            api -> security [style=dashed];
+            api -> validation [style=dashed];
+        }
+
+        subgraph cluster_data {
+            label = "Data Persistence Layer";
+            bgcolor="#e8f5e9";
+            db [label="PostgreSQL Database\n(Relational Data Store)", shape=cylinder, fillcolor="#c8e6c9"];
+            orm [label="SQLAlchemy ORM\n(Pythonic DB Interaction)", shape=cds, style=filled, fillcolor="#a5d6a7"];
+            migrations [label="Alembic\n(Schema Version Control)", shape=cds, style=filled, fillcolor="#a5d6a7"];
+            api -> orm [label="CRUD Operations"];
+            orm -> db;
+            migrations -> db [label="Evolves Schema"];
+        }
+
+        subgraph cluster_async {
+            label = "Asynchronous Processing & MLOps";
+            bgcolor="#fbe9e7";
+            rabbitmq [label="RabbitMQ\n(Task Queue)", fillcolor="#ffccbc"];
+            celery [label="Celery Distributed Worker\n(Background Job Processor)", fillcolor="#ffab91"];
+            mlflow [label="MLflow Tracking Server\n(Experiment Management)", fillcolor="#ffab91"];
+            s3 [label="S3 Object Storage\n(ML Models & Artifacts)", shape=cylinder, fillcolor="#ffccbc"];
+            
+            api -> rabbitmq [label="Dispatches long-running tasks\n(e.g., new course analysis)"];
+            rabbitmq -> celery [label="Delivers task"];
+            celery -> db [label="Writes results"];
+            celery -> mlflow [label="Logs metrics & params"];
+            mlflow -> s3 [label="Manages model lifecycle"];
+        }
+        
+        subgraph cluster_devops {
+            label = "Infrastructure & Deployment (DevOps)";
+            bgcolor="#eceff1";
+            docker [label="Docker & Docker-Compose\n(Containerization)", fillcolor="#cfd8dc"];
+            render [label="Render.com\n(PaaS Cloud Hosting)", shape=cloud, fillcolor="#b0bec5"];
+            docker -> render [label="Ensures consistent deployment"];
+        }
+
+        frontend -> api [label="Secure API Calls (HTTPS/JSON)"];
+    }
+    """
+    st.graphviz_chart(graphviz_code)
+    st.caption("This diagram illustrates the microservices-based architecture. Each component is containerized and communicates via well-defined APIs or message queues, ensuring scalability and maintainability with a clear separation of concerns.")
+
+    # --- Platform Snapshots ---
+    st.markdown("##### Platform Snapshots")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.image("frontend/assets/backend_docs.png", use_column_width=True)
+        st.caption("**Automated API Documentation** powered by FastAPI's OpenAPI integration. This provides a live, interactive 'source of truth' for all endpoints, crucial for efficient development and clear team communication.")
+    with col2:
+        st.image("frontend/assets/mlFlow.png", use_column_width=True)
+        st.caption("**End-to-End MLOps with MLflow** to track experiments, log metrics, and manage model versions. This ensures our recommendation models are reproducible, auditable, and ready for production.")
+    with col3:
+        st.image("frontend/assets/rabbitmq_ui.png", use_column_width=True)
+        st.caption("**Scalable Asynchronous Processing** with RabbitMQ. Decoupling long-running tasks ensures the UI remains responsive under load, a key pattern for building resilient, enterprise-grade systems.")
+    
+    st.divider()
+

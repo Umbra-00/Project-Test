@@ -98,15 +98,15 @@ async def ingest_courses(
 
         return ingested_courses
 
-    except Exception as e:
+    except HTTPException:
+        raise  # Re-raise HTTPException to be handled by FastAPI
+    except Exception:
         logger.error(
-            f"API - Error during course ingestion: {str(e)}",
-            extra={"error_type": type(e).__name__},
+            "API - Unhandled error during course ingestion",
             exc_info=True,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Internal server error during ingestion: {e}"
-        )
+        # Let the global handler deal with this
+        raise
 
 
 @router.get(
@@ -192,6 +192,8 @@ def read_courses(
 
         return courses
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(
             f"Error retrieving courses: {str(e)}",
