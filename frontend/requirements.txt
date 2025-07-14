@@ -1,4 +1,6 @@
-streamlit==1.22.0
+streamlit>=1.28.0
 requests==2.31.0 
 # Add the following line for Mermaid diagram support
-streamlit-mermaid 
+# streamlit-mermaid
+plotly==5.17.0
+pandas==2.2.2

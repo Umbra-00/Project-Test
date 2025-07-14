@@ -24,6 +24,10 @@ if config.config_file_name is not None:
 # Prioritize environment variable for CI/CD and deployment
 DATABASE_URL = os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
 
+# Fallback to a default development database URL if none is configured
+if DATABASE_URL is None:
+    DATABASE_URL = "postgresql://umbra_user:umbra_dev_password123@localhost:5432/umbra_db"
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

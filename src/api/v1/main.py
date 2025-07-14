@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from src.data_engineering.db_utils import check_db_health
 from src.utils.logging_utils import setup_logging
 from src.api.v1.endpoints import courses, users, learning_paths, businesses  # Import routers
-# from src.api.v1.endpoints import recommendations  # Disabled due to ML dependency issues
+# from src.api.v1.endpoints import recommendations  # Temporarily disabled due to missing dependencies
 from src.api.v1.exceptions import (
     DatabaseError,
     NotFoundError,

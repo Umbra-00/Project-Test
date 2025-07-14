@@ -10,7 +10,7 @@ WORKDIR /app
 # Copy requirements file and install Python dependencies
 # Note: We assume requirements.txt is at the project root for consistency.
 # If your frontend has a separate requirements.txt in frontend/, adjust this path.
-COPY requirements.txt /app/
+COPY frontend/requirements.txt /app/
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy the frontend application code
