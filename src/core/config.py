@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_USER: str = "umbra_user"
-    DB_PASSWORD: str = "password"
+    DB_PASSWORD: str = "umbra_password"
     DB_NAME: str = "umbra_db"
 
     # Security Settings

@@ -42,6 +42,8 @@ services:
         value: "true"
       - key: FASTAPI_BASE_URL
         value: "https://umbra-backend.onrender.com"
+      - key: APP_HOST
+        value: "https://umbra-frontend.onrender.com"
 
   # MLflow tracking server removed - not supported on free tier
   # Database migrations will be handled by the backend service startup

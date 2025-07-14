@@ -6,14 +6,19 @@ import os
 
 # --- Configuration ---
 # Determine backend URL based on environment
-if os.getenv("RENDER"):  # We're on Render
-    # Use the predictable Render URL pattern
-    FASTAPI_BASE_URL = "https://umbra-backend.onrender.com"
+if os.getenv("RENDER"):
+    # When on Render, use the URL provided by Render's environment variables
+    FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "https://umbra-backend.onrender.com")
+elif os.getenv("BACKEND_URL"):
+    # When in Docker Compose, use the service URL from the BACKEND_URL env var
+    FASTAPI_BASE_URL = os.getenv("BACKEND_URL")
 else:
-    # Local development
+    # For local development outside of Docker, fall back to localhost
     FASTAPI_BASE_URL = "http://localhost:8000"
 
 API_URL = f"{FASTAPI_BASE_URL}/api/v1"
+APP_HOST = os.getenv("APP_HOST", "localhost")
+
 
 st.set_page_config(layout="wide", page_title="Umbra Personalized Learning Platform")
 
@@ -176,7 +181,7 @@ with st.sidebar:
     - AI-powered recommendations
     """)
 
-tab1, tab2, tab3 = st.tabs(["📚 Discover Courses", "➕ Add Course", "🎯 Learning Paths"])
+tab1, tab2, tab3, tab4 = st.tabs(["📚 Discover Courses", "➕ Add Course", "🎯 Learning Paths", "ℹ️ About"])
 
 with tab1:
     st.header("Available Courses")
@@ -334,3 +339,74 @@ with tab3:
         """)
     
     st.info("💡 **Note**: This platform focuses on personalized learning experiences, not certifications or job guarantees. It's about finding the learning approach that works best for YOU.")
+
+
+with tab4:
+    st.header("About the Umbra Learning Platform: A Technical Deep-Dive")
+
+    st.markdown("""
+    This platform is engineered from the ground up using a modern, scalable, and maintainable technology stack. Our architecture is built on the principle of **microservices**, where different parts of the application are independent, communicating over a network. This approach allows for greater flexibility, targeted scaling, and easier maintenance.
+    """)
+
+    st.subheader("Backend Deep-Dive (The Engine Room)")
+    st.markdown("The backend is a high-performance REST API built with Python.")
+    with st.expander("FastAPI Framework"):
+        st.markdown(f"""
+        - **What it is:** A modern, high-performance web framework for building APIs.
+        - **Why we use it:**
+            - **Speed:** It's one of the fastest Python frameworks available.
+            - **Automatic Interactive Documentation:** It automatically generates interactive API documentation. You can explore this at [http://{APP_HOST}:8000/docs](http://{APP_HOST}:8000/docs).
+            - **Asynchronous Support:** It's built to handle many concurrent requests efficiently.
+        """)
+    with st.expander("Data Persistence & Validation (SQLAlchemy & Pydantic)"):
+        st.markdown("""
+        - **What they are:** SQLAlchemy is an Object-Relational Mapper (ORM) that translates Python objects into database queries. Pydantic is a data validation library.
+        - **Why we use them:** They ensure data integrity and make database interactions safer and more intuitive.
+        """)
+    with st.expander("Database Migrations (Alembic)"):
+        st.markdown("""
+        - **What it is:** A database migration tool for SQLAlchemy.
+        - **Why we use it:** It allows us to manage database schema changes in a systematic, version-controlled way.
+        """)
+    with st.expander("Security (JWT & Passlib)"):
+        st.markdown("""
+        - **What they are:** Libraries for authentication and secure password hashing.
+        - **Why we use them:** They ensure that only authenticated users can access sensitive data.
+        """)
+
+    st.subheader("Frontend Deep-Dive (The User Experience)")
+    with st.expander("Streamlit Framework"):
+        st.markdown("""
+        - **What it is:** An open-source Python library for creating custom web apps.
+        - **Why we use it:** It allows for rapid development of interactive user interfaces directly in Python.
+        """)
+
+    st.subheader("Infrastructure & Core Services")
+    st.markdown("These are the foundational services that support the entire platform.")
+    with st.expander("PostgreSQL Database"):
+        st.markdown("""
+        - **What it is:** A powerful, open-source object-relational database system.
+        - **Why we use it:** It provides a reliable and robust foundation for storing our application's data.
+        """)
+    with st.expander("RabbitMQ (Message Broker)"):
+        st.markdown(f"""
+        - **What it is:** A message broker for asynchronous communication.
+        - **Why we use it:** It makes our platform more scalable and responsive by offloading long-running tasks. You can view the management UI at [http://{APP_HOST}:15672](http://{APP_HOST}:15672) (credentials: `guest`/`guest`).
+        """)
+    with st.expander("MLflow (Machine Learning Operations)"):
+        st.markdown(f"""
+        - **What it is:** A platform to manage the machine learning lifecycle.
+        - **Why we use it:** It helps us track experiments and manage our recommendation models. You can view the UI at [http://{APP_HOST}:5000](http://{APP_HOST}:5000).
+        """)
+    
+    st.subheader("Deployment & Operations (DevOps)")
+    with st.expander("Docker & Docker Compose"):
+        st.markdown("""
+        - **What they are:** Tools for containerization and orchestration.
+        - **Why we use them:** They ensure our application runs consistently across different environments.
+        """)
+    with st.expander("Render (Cloud Platform)"):
+        st.markdown("""
+        - **What it is:** Our cloud provider for hosting the live application.
+        - **Why we use it:** It provides a seamless deployment experience and manages our production database. You can visit the live application at [https://umbra-frontend.onrender.com](https://umbra-frontend.onrender.com).
+        """)
