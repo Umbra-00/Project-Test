@@ -1,0 +1,68 @@
+name: Sync Repository to NotebookLM
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Generate Repository Documentation
+      run: |
+        echo "# Umbra Educational Data Platform - Live Documentation" > repo_snapshot.md
+        echo "Generated on: $(date)" >> repo_snapshot.md
+        echo "" >> repo_snapshot.md
+        
+        # Add README
+        if [ -f README.md ]; then
+          echo "## Project Overview" >> repo_snapshot.md
+          cat README.md >> repo_snapshot.md
+          echo "" >> repo_snapshot.md
+        fi
+        
+        # Add all Python files with structure
+        echo "## Python Source Code" >> repo_snapshot.md
+        find . -name "*.py" -not -path "./.git/*" | while read file; do
+          echo "### File: $file" >> repo_snapshot.md
+          echo '```
+          cat "$file" >> repo_snapshot.md
+          echo '```' >> repo_snapshot.md
+          echo "" >> repo_snapshot.md
+        done
+        
+        # Add JavaScript files
+        echo "## JavaScript/TypeScript Code" >> repo_snapshot.md
+        find . -name "*.js" -o -name "*.ts" -not -path "./.git/*" -not -path "./node_modules/*" | while read file; do
+          echo "### File: $file" >> repo_snapshot.md
+          echo '```
+          cat "$file" >> repo_snapshot.md
+          echo '```' >> repo_snapshot.md
+          echo "" >> repo_snapshot.md
+        done
+        
+        # Add configuration files
+        echo "## Configuration Files" >> repo_snapshot.md
+        find . -name "*.json" -o -name "*.yaml" -o -name "*.yml" -not -path "./.git/*" -not -path "./node_modules/*" | while read file; do
+          echo "### File: $file" >> repo_snapshot.md
+          echo '```
+          cat "$file" >> repo_snapshot.md
+          echo '```' >> repo_snapshot.md
+          echo "" >> repo_snapshot.md
+        done
+    
+    - name: Upload to Google Drive
+      env:
+        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+        GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+      run: |
+        # Install Google Drive CLI tool
+        pip install google-api-python-client google-auth google-auth-oauthlib
+        
+        # Upload script (we'll create this)
+        python .github/scripts/upload_to_drive.py repo_snapshot.md
